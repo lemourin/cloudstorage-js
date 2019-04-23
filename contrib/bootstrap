@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+
+export ARCH=emscripten
+export INSTALL_PATH=$PWD/$ARCH
+export PKG_CONFIG_LIBDIR=$INSTALL_PATH/lib/pkgconfig
+export CMAKE_PREFIX_PATH=$INSTALL_PATH
+export PATH=$INSTALL_PATH/bin:$PATH
+CONCURRENCY=4
+
+export CXXFLAGS="-Oz"
+export CFLAGS="$CXXFLAGS"
+
+set -e
+
+unpack() {
+  if [[ ! -d $1 ]]; then
+    tar xf $1.$2
+    if [[ $? -ne 0 ]]; then
+      echo "Couldn't extract $1.$2"
+      exit 1
+    fi
+    cd $1
+  else
+    cd $1
+  fi
+}
+
+fetch() {
+  EXT=${2##*.}
+  if [[ ! -f $2 ]]; then
+    DEST=$(tempfile)
+    wget $1 -O $DEST
+    if [[ $? -ne 0 ]]; then
+      echo "Couldn't fetch $1"
+      exit 1
+    else
+      mv $DEST $2
+    fi
+  fi
+  unpack `basename $2 .tar.$EXT` tar.$EXT
+}
+
+fetch_url() {
+  fetch $1 ${1##*/}
+}
+
+fetch_github() {
+  TARBALL=${1##*/}
+  REPO_URL=${1%%/archive/*}
+  REPO_NAME=${REPO_URL##*/}
+  NAME=${TARBALL##v}
+  fetch $1 $REPO_NAME-$NAME
+}
+
+run_make() {
+  emmake make -j $CONCURRENCY && emmake make install
+}
+
+fetch_jsoncpp() {
+  fetch_github https://github.com/open-source-parsers/jsoncpp/archive/$1.tar.gz
+}
+
+install_jsoncpp() {
+  mkdir -p build
+  cd build
+  emcmake cmake .. \
+    -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH -DBUILD_SHARED_LIBS=0 -DJSONCPP_WITH_TESTS=0 \
+    -DCMAKE_CXX_FLAGS=$CXXFLAGS
+  run_make
+}
+
+fetch_tinyxml2() {
+  fetch_github https://github.com/leethomason/tinyxml2/archive/$1.tar.gz
+}
+
+install_tinyxml2() {
+  mkdir -p build
+  cd build
+  emcmake cmake .. \
+    -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH -DBUILD_SHARED_LIBS=0 -DBUILD_STATIC_LIBS=1 \
+    -DCMAKE_CXX_FLAGS=$CXXFLAGS
+  run_make
+}
+
+fetch_libcloudstorage() {
+  fetch_github https://github.com/lemourin/libcloudstorage/archive/$1.tar.gz
+}
+
+install_libcloudstorage() {
+  ./bootstrap
+  mkdir -p build 
+  cd build
+  emconfigure ../configure \
+    --enable-static --disable-shared --prefix=$INSTALL_PATH \
+    PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR \
+    CXXFLAGS=$CXXFLAGS CFLAGS=$CFLAGS
+  run_make
+}
+
+install_run() {
+  BASE_DIRECTORY=$PWD
+  fetch_$1 $2
+  if [[ ! -f .done ]]; then
+    BUILD_DIRECTORY=$PWD
+    install_$1 $2
+    if [[ $? -eq 0 ]]; then
+      cd $BUILD_DIRECTORY
+      touch .done
+    else
+      echo "Failed to build $1"
+      exit 1
+    fi
+  fi
+  cd $BASE_DIRECTORY
+}
+
+install() {
+  uppercase=`echo $1 | awk '{print toupper($0)}'`
+  name=${uppercase}_INSTALL
+  if [[ $INSTALL_LISTED -eq 1 ]]; then
+    if [[ ${!name} -eq 1 ]]; then
+      install_run $1 $2
+    fi
+  else
+    if [[ "x${!name}" != "x0" ]]; then
+      install_run $1 $2
+    fi
+  fi
+}
+
+INSTALL_LISTED=0
+
+for i in $@; do
+  if [[ "$i" == *without-* ]]; then
+    component=${i##"--without-"}
+    uppercase_component=`echo $component | awk '{print toupper($0)}'`
+    declare "${uppercase_component}_INSTALL"="0"
+  fi
+
+  if [[ "$i" == *with-* ]]; then
+    component=${i##"--with-"}
+    uppercase_component=`echo $component | awk '{print toupper($0)}'`
+    INSTALL_LISTED=1
+    declare "${uppercase_component}_INSTALL"="1"
+  fi
+done
+
+mkdir tarballs -p
+cd tarballs
+
+install "jsoncpp" 1.8.3
+install "tinyxml2" 6.0.0
+install "libcloudstorage" master
