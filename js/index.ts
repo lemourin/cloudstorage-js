@@ -2,10 +2,10 @@
 
 import { CloudFactory } from './cloudstorage'
 
-Module.onRuntimeInitialized = async _ => {
+Module.onRuntimeInitialized = async () => {
     const factory = new CloudFactory();
-    document.getElementById("providers").textContent = factory.availableProviders();
-    
+    document.getElementById("providers").textContent = factory.availableProviders().toString();
+
     const access = factory.createAccess("google", "");
     const page = await access.listDirectoryPage(access.root(), "");
   

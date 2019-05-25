@@ -33,7 +33,7 @@ function cloudstorageApi() {
   };
 }
 
-var cloudApi;
+var cloudApi: any;
 
 const Cloud = {
   api: () => {
@@ -42,7 +42,7 @@ const Cloud = {
     }
     return cloudApi;
   },
-  string: (value) => {
+  string: (value: number) => {
     const api = cloudApi;
     const result = api.stringStr(value);
     api.stringRelease(value);
@@ -50,8 +50,10 @@ const Cloud = {
   },
 };
 
-export const CloudItem = class {
-  constructor(pointer) {
+export class CloudItem {
+  api: any
+  pointer: number
+  constructor(pointer: number) {
     this.api = Cloud.api();
     this.pointer = pointer;
   }
@@ -65,8 +67,32 @@ export const CloudItem = class {
   }
 };
 
-export const CloudAccess = class {
-  constructor(pointer) {
+export class CloudError {
+  code: number
+  description: string
+  constructor(code: number, description: string) {
+    this.code = code;
+    this.description = description;
+  }
+}
+
+export class CloudPageData {
+  items: CloudItem[]
+  nextToken: string
+  constructor(items: CloudItem[], nextToken: string) {
+    this.items = items;
+    this.nextToken = nextToken;
+  }
+
+  destroy() {
+    for (const d of this.items) d.destroy();
+  }
+}
+
+export class CloudAccess {
+  api: any
+  pointer: number
+  constructor(pointer : number) {
     this.api = Cloud.api();
     this.pointer = pointer;
   }
@@ -79,25 +105,21 @@ export const CloudAccess = class {
     return new CloudItem(this.api.cloudAccessRoot(this.pointer));
   }
 
-  listDirectoryPage(item, token) {
+  listDirectoryPage(item: CloudItem, token: string): Promise<CloudPageData> {
     const api = this.api;
     return new Promise((resolve, reject) => {
-      const listDirectoryCallback = addFunction((error, pageData) => {
+      const listDirectoryCallback = addFunction((error: number, pageData: number) => {
         if (pageData !== 0) {
           const itemList = api.pageDataItemList(pageData);
           const size = api.vectorItemSize(itemList);
-          const items = [];
+          const items: CloudItem[] = [];
           for (let i = 0; i < size; i++) {
             const item = api.vectorItemGet(itemList, i);
             items.push(new CloudItem(item));
           }
-          resolve({ 
-            items, 
-            nextToken: api.pageDataToken(pageData), 
-            destroy: () => { for (const d of items) d.destroy(); } 
-          });
+          resolve(new CloudPageData(items, api.pageDataToken(pageData)));
         } else if (error !== 0) {
-          reject({ code: api.exceptionCode(error), description: api.exceptionDescription(error) });
+          reject(new CloudError(api.exceptionCode(error), api.exceptionDescription(error)));
         }
         removeFunction(listDirectoryCallback);
       }, "vii");
@@ -106,7 +128,9 @@ export const CloudAccess = class {
   }
 };
 
-export const CloudFactory = class {
+export class CloudFactory {
+  api: any
+  pointer: number
   constructor() {
     this.api = Cloud.api();
     this.pointer = this.api.cloudFactoryCreate();
@@ -116,7 +140,7 @@ export const CloudFactory = class {
     this.api.cloudFactoryRelease(this.pointer);
   }
 
-  availableProviders() {
+  availableProviders(): string[] {
     const api = this.api;
     const providers = api.cloudFactoryAvailableProvidersImpl(this.pointer);
     const count = api.vectorStringSize(providers);
@@ -128,11 +152,11 @@ export const CloudFactory = class {
     return result;
   }
 
-  createAccess(name, token, accessToken = "") {
+  createAccess(name: string, token: string, accessToken = "") {
     return new CloudAccess(this.api.cloudFactoryCreateAccess(this.pointer, name, token, accessToken));
   }
 
-  authorizeUrl(name) {
+  authorizeUrl(name: string) {
     return Cloud.string(this.api.cloudFactoryAuthorizationUrl(this.pointer, name));
   }
 };
