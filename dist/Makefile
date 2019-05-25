@@ -2,6 +2,10 @@ all: cloudstorage-wasm.js
 
 LIBS := \
 		${PWD}/../contrib/emscripten/lib/libcloudstorage.a \
+		${PWD}/../contrib/emscripten/lib/libmega.a \
+		${PWD}/../contrib/emscripten/lib/libcryptopp.a \
+		${PWD}/../contrib/emscripten/lib/libcrypto.a \
+		${PWD}/../contrib/emscripten/lib/libssl.a \
 		${PWD}/../contrib/emscripten/lib/libjsoncpp.a \
 		${PWD}/../contrib/emscripten/lib/libtinyxml2.a
 

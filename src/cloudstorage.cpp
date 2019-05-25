@@ -134,6 +134,8 @@ struct JSHttp : public IHttp {
       response.output_stream_ = userdata->mResponse;
       response.error_stream_ = userdata->mErrorStream;
       if (f->numBytes > 0) {
+        response.headers_.insert(
+            {"content-length", std::to_string(f->numBytes)});
         if (userdata->mCallback->isSuccess(f->status, {})) {
           *response.output_stream_ << std::string(f->data, f->numBytes);
         } else {

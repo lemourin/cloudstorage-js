@@ -82,6 +82,78 @@ install_tinyxml2() {
   run_make
 }
 
+fetch_cryptopp() {
+  VERSION=${1//./_}
+  fetch_github https://github.com/weidai11/cryptopp/archive/CRYPTOPP_$VERSION.tar.gz
+}
+
+install_cryptopp() {
+  emmake make -j $CONCURRENCY static
+  emmake make -j $CONCURRENCY install PREFIX=$INSTALL_PATH
+}
+
+fetch_sqlite() {
+  fetch_url https://www.sqlite.org/2018/sqlite-autoconf-$1.tar.gz
+}
+
+install_sqlite() {
+  emconfigure ./configure --prefix=$INSTALL_PATH --enable-static --disable-shared
+  run_make
+}
+
+fetch_openssl() {
+  fetch_url https://www.openssl.org/source/openssl-$1.tar.gz
+}
+
+install_openssl() {
+  emconfigure ./Configure --prefix=$INSTALL_PATH  --openssldir=$INSTALL_PATH/openssl -D__STDC_NO_ATOMICS__ \
+    no-ssl3 no-comp no-hw no-engine no-dso no-asm linux-generic32 no-shared no-tests
+  sed -i -E "s/^CROSS_COMPILE=.*$/CROSS_COMPILE=/" Makefile
+  run_make
+}
+
+fetch_curl() {
+  fetch_url https://github.com/curl/curl/releases/download/curl-${1//./_}/curl-$1.tar.gz
+}
+
+install_curl() {
+  emconfigure ./configure --prefix=$INSTALL_PATH --enable-static --disable-shared
+  run_make
+}
+
+fetch_cares() {
+  VERSION=${1//./_}
+  fetch_github https://github.com/c-ares/c-ares/archive/cares-$VERSION.tar.gz
+}
+
+install_cares() {
+  ./buildconf
+  emconfigure ./configure --prefix=$INSTALL_PATH --enable-static --disable-shared CPPFLAGS=-DHAVE_RECVFROM
+  run_make
+}
+
+fetch_megasdk() {
+  fetch_github https://github.com/meganz/sdk/archive/v$1.tar.gz
+}
+
+install_megasdk() {
+  ./autogen.sh
+  emconfigure ./configure --prefix=$INSTALL_PATH \
+    --without-freeimage \
+    --without-zlib \
+    --disable-examples \
+    --disable-shared \
+    --enable-static \
+    --with-cryptopp=$INSTALL_PATH \
+    --with-openssl=$INSTALL_PATH \
+    --with-cares=$INSTALL_PATH \
+    --with-sqlite=$INSTALL_PATH \
+    --with-curl=$INSTALL_PATH \
+    LDFLAGS="-s ERROR_ON_UNDEFINED_SYMBOLS=0" \
+    CXXFLAGS=-std=c++14
+  run_make
+}
+
 fetch_libcloudstorage() {
   fetch_github https://github.com/lemourin/libcloudstorage/archive/$1.tar.gz
 }
@@ -92,6 +164,13 @@ install_libcloudstorage() {
   cd build
   emconfigure ../configure \
     --enable-static --disable-shared --prefix=$INSTALL_PATH \
+    --with-cryptopp \
+    --with-mega \
+    --without-curl \
+    --without-microhttpd \
+    --without-ffmpeg \
+    libcryptopp_CFLAGS="-I$INSTALL_PATH/include" \
+    libcryptopp_LIBS="-L$INSTALL_PATH/lib -lcryptopp" \
     PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR \
     CXXFLAGS=$CXXFLAGS CFLAGS=$CFLAGS
   run_make
@@ -150,4 +229,10 @@ cd tarballs
 
 install "jsoncpp" 1.8.3
 install "tinyxml2" 6.0.0
+install "cryptopp" 7.0.0
+install "sqlite" 3240000
+install "openssl" 1.1.1b
+install "cares" 1.15.0
+install "curl" 7.57.0
+install "megasdk" 3.5.2
 install "libcloudstorage" master
