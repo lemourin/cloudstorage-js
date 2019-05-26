@@ -6,12 +6,17 @@
     "build": "npm run build:contrib && npm run build:emscripten && webpack --mode=development"
   },
   "devDependencies": {
+    "dotenv": "^8.0.0",
     "ts-loader": "^6.0.1",
     "typescript": "^3.4.5",
     "webpack": "^4.30.0",
     "webpack-cli": "^3.3.1"
   },
   "dependencies": {
-    "@types/emscripten": "0.0.32"
+    "@types/emscripten": "0.0.32",
+    "@types/react": "^16.8.18",
+    "@types/react-dom": "^16.8.4",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
   }
 }

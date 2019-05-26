@@ -191,7 +191,7 @@ ICloudFactory* cloudFactoryCreate() {
   if (!initialized) {
     gCloudFactory = ICloudFactory::create(
                         ICloudFactory::InitData{
-                            "http://localhost:8080", std::make_unique<JSHttp>(),
+                            "http://localhost:12345", std::make_unique<JSHttp>(),
                             std::make_unique<DummyHttpServerFactory>(), nullptr,
                             std::make_unique<DummyThreadPoolFactory>(),
                             std::make_unique<CloudFactoryCallback>()})
