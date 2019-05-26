@@ -6,7 +6,10 @@
     "build": "npm run build:contrib && npm run build:emscripten && webpack --mode=development"
   },
   "devDependencies": {
+    "css-loader": "^2.1.1",
     "dotenv": "^8.0.0",
+    "postcss-loader": "^3.0.0",
+    "style-loader": "^0.23.1",
     "ts-loader": "^6.0.1",
     "typescript": "^3.4.5",
     "webpack": "^4.30.0",
@@ -16,7 +19,14 @@
     "@types/emscripten": "0.0.32",
     "@types/react": "^16.8.18",
     "@types/react-dom": "^16.8.4",
+    "postcss": "^7.0.16",
+    "postcss-calc": "^7.0.1",
+    "postcss-each": "^0.10.0",
+    "postcss-import": "^12.0.1",
+    "postcss-mixins": "^6.2.1",
+    "postcss-preset-env": "^6.6.0",
     "react": "^16.8.6",
-    "react-dom": "^16.8.6"
+    "react-dom": "^16.8.6",
+    "react-toolbox": "^2.0.0-beta.13"
   }
 }

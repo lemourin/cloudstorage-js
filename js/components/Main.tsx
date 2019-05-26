@@ -1,6 +1,9 @@
 import * as React from "react";
 
-import { CloudFactory } from "../cloudstorage"
+import { CloudFactory } from "../cloudstorage";
+
+import { AppBar } from 'react-toolbox/lib/app_bar';
+import { Layout, NavDrawer, Panel } from 'react-toolbox/lib/layout';
 
 export interface MainState { content: string, authorizeUrl: string, providers: string }
 
@@ -29,10 +32,18 @@ export class Main extends React.Component<{}, MainState> {
     }
 
     render() {
-        return <div>
-            <p>Google auth url: {this.state.authorizeUrl}</p>
-            <p>Content: {this.state.content}</p>
-            <p>Providers: {this.state.providers}</p>
-        </div>;
+        return <Layout>
+            <NavDrawer>
+                <p>Drawer</p>
+            </NavDrawer>
+            <Panel>
+                <AppBar leftIcon='menu' />
+                <div>
+                    <p>Google auth url: {this.state.authorizeUrl}</p>
+                    <p>Content: {this.state.content}</p>
+                    <p>Providers: {this.state.providers}</p>
+                </div>
+            </Panel>
+        </Layout>;
     }
 }
