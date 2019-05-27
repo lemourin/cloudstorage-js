@@ -19,6 +19,7 @@
     "@types/emscripten": "0.0.32",
     "@types/react": "^16.8.18",
     "@types/react-dom": "^16.8.4",
+    "@types/react-router-dom": "^4.3.3",
     "postcss": "^7.0.16",
     "postcss-calc": "^7.0.1",
     "postcss-each": "^0.10.0",
@@ -27,6 +28,7 @@
     "postcss-preset-env": "^6.6.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
+    "react-router-dom": "^5.0.0",
     "react-toolbox": "^2.0.0-beta.13"
   }
 }
