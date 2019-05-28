@@ -5,7 +5,7 @@ import { CloudFactory } from "../cloudstorage";
 import { AppBar } from "react-toolbox/lib/app_bar";
 import { Layout, NavDrawer, Panel } from "react-toolbox/lib/layout";
 import { List, ListItem } from "react-toolbox/lib/list";
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+import { HashRouter as Router, Route, Link } from "react-router-dom";
 import { AddAccount } from "./AddAccount";
 import AuthorizedView from "./AuthorizedView";
 
@@ -39,6 +39,7 @@ export class Main extends React.Component<{}, MainState> {
     }
 
     async componentDidMount() {
+        console.log(location.search);
         const factory = this.state.factory;
         this.setState({
             providers: factory.availableProviders().toString(),

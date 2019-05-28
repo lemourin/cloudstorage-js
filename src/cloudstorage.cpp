@@ -189,14 +189,14 @@ EMSCRIPTEN_KEEPALIVE
 ICloudFactory* cloudFactoryCreate() {
   static bool initialized;
   if (!initialized) {
-    gCloudFactory = ICloudFactory::create(
-                        ICloudFactory::InitData{
-                            "http://localhost:12345", std::make_unique<JSHttp>(),
-                            std::make_unique<DummyHttpServerFactory>(), nullptr,
-                            std::make_unique<DummyThreadPoolFactory>(),
-                            std::make_unique<CloudFactoryCallback>()})
-
-                        .release();
+    gCloudFactory =
+        ICloudFactory::create(
+            ICloudFactory::InitData{
+                "http://localhost:12345", std::make_unique<JSHttp>(),
+                std::make_unique<DummyHttpServerFactory>(), nullptr,
+                std::make_unique<DummyThreadPoolFactory>(),
+                std::make_unique<CloudFactoryCallback>()})
+            .release();
     emscripten_set_main_loop(
         [] {
           if (gCloudFactory) gCloudFactory->processEvents();
