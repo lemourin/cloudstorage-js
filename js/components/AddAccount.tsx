@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { CloudFactory } from "../cloudstorage";
 import { List, ListItem } from "react-toolbox/lib/list";
+import { Link } from 'react-router-dom'
 
 interface AddAccountProps {
     factory: CloudFactory
@@ -18,16 +19,22 @@ export class AddAccount extends React.Component<AddAccountProps, {}> {
         }
         else {
             const m = url.match(`^${process.env.HOSTNAME}/([^/]*)/login(.*)$`);
-            return `${process.env.HOSTNAME}/#/${m[1]}/login${m[2]}`;
+            return `/auth/${m[1]}/${m[2]}`;
         }
     }
 
     render() {
         return <List>
             {this.props.factory.availableProviders().map((value, _) => {
-                return <a key={value} href={this.patchUrl(this.props.factory.authorizeUrl(value))}>
-                    <ListItem caption={value} />
-                </a>;
+                const url = this.props.factory.authorizeUrl(value);
+                if (url.match(`^${process.env.HOSTNAME}.*$`))
+                    return <Link key={`${value}-internal`} to={this.patchUrl(url)}>
+                        <ListItem caption={value} />
+                    </Link>
+                else
+                    return <a key={`${value}-external`} href={this.patchUrl(url)}>
+                        <ListItem caption={value} />
+                    </a>;
             })}
         </List>;
     }
