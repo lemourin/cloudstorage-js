@@ -24,7 +24,7 @@ interface MainState {
 
 export class Main extends React.Component<{}, MainState> {
     state = {
-        factory: new CloudFactory(),
+        factory: new CloudFactory(process.env.HOSTNAME),
         drawerActive: false,
         authorizationCode: "",
         authorizationAccountType: ""

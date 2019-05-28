@@ -2,7 +2,7 @@
 
 function cloudstorageApi() {
   return {
-    cloudFactoryCreate: Module.cwrap("cloudFactoryCreate", "number", []),
+    cloudFactoryCreate: Module.cwrap("cloudFactoryCreate", "number", ["string"]),
     cloudFactoryRelease: Module.cwrap("cloudFactoryRelease", null, ["number"]),
     cloudFactoryAvailableProvidersImpl: Module.cwrap("cloudFactoryAvailableProviders", "number", ["number"]),
     cloudFactoryCreateAccess: Module.cwrap("cloudFactoryCreateAccess", "number", ["number", "string", "string", "string"]),
@@ -92,7 +92,7 @@ export class CloudPageData {
 export class CloudAccess {
   api: any
   pointer: number
-  constructor(pointer : number) {
+  constructor(pointer: number) {
     this.api = Cloud.api();
     this.pointer = pointer;
   }
@@ -131,9 +131,9 @@ export class CloudAccess {
 export class CloudFactory {
   api: any
   pointer: number
-  constructor() {
+  constructor(hostname: string) {
     this.api = Cloud.api();
-    this.pointer = this.api.cloudFactoryCreate();
+    this.pointer = this.api.cloudFactoryCreate(hostname);
   }
 
   destroy() {
