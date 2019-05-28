@@ -1,6 +1,5 @@
 node_modules/
 dist/*
-!dist/Makefile
 .vscode
 contrib/emscripten
 contrib/tarballs
