@@ -32,6 +32,22 @@ export class Main extends React.Component<{}, MainState> {
 
     constructor(props: {}) {
         super(props);
+        this.state.factory.loadConfig({
+            keys: {
+                google: {
+                    client_id: "291075523655-bjt77t9cbqkdsvfudovb5h1k8i3ak66i.apps.googleusercontent.com",
+                    client_secret: "BdNvLHCAyiAPge_WHJ_oA5Sr"
+                },
+                gphotos: {
+                    client_id: "291075523655-bjt77t9cbqkdsvfudovb5h1k8i3ak66i.apps.googleusercontent.com",
+                    client_secret: "BdNvLHCAyiAPge_WHJ_oA5Sr"
+                },
+                youtube: {
+                    client_id: "291075523655-bjt77t9cbqkdsvfudovb5h1k8i3ak66i.apps.googleusercontent.com",
+                    client_secret: "BdNvLHCAyiAPge_WHJ_oA5Sr"
+                }
+            }
+        });
     }
 
     toggleDrawerActive = () => {
