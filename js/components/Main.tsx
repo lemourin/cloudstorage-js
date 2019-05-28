@@ -11,48 +11,27 @@ import AuthorizedView from "./AuthorizedView";
 
 function TestingContent() {
     return <div style={{ flex: 1, overflowY: 'auto', padding: '1.8rem' }}>
-        <p>Google auth url: {this.state.authorizeUrl}</p>
-        <p>Content: {this.state.content}</p>
-        <p>Providers: {this.state.providers}</p>
+        <p>Google auth url</p>
     </div>
 }
 
 interface MainState {
     factory: CloudFactory,
-    content: string,
-    authorizeUrl: string,
-    providers: string,
-    drawerActive: boolean
+    drawerActive: boolean,
+    authorizationCode: string,
+    authorizationAccountType: string
 };
 
 export class Main extends React.Component<{}, MainState> {
     state = {
         factory: new CloudFactory(),
-        content: "",
-        authorizeUrl: "",
-        providers: "",
-        drawerActive: false
+        drawerActive: false,
+        authorizationCode: "",
+        authorizationAccountType: ""
     }
 
     toggleDrawerActive = () => {
         this.setState({ drawerActive: !this.state.drawerActive })
-    }
-
-    async componentDidMount() {
-        console.log(location.search);
-        const factory = this.state.factory;
-        this.setState({
-            providers: factory.availableProviders().toString(),
-            authorizeUrl: factory.authorizeUrl("google")
-        });
-
-        const access = factory.createAccess(process.env.CLOUD_TYPE, process.env.CLOUD_TOKEN);
-        const page = await access.listDirectoryPage(access.root(), "");
-
-        this.setState({ content: page.items.reduce((accumulator, current) => accumulator + "\n" + current.filename(), "") });
-
-        page.destroy();
-        access.destroy();
     }
 
     render() {
@@ -75,8 +54,11 @@ export class Main extends React.Component<{}, MainState> {
                     {
                         this.state.factory.availableProviders().map((value, _) => {
                             return <Route
-                                path={"/" + value} exact
-                                component={(props: any) => { return <AuthorizedView accountType={value} search={props.location.search} /> }}
+                                key={value}
+                                path={`/${value}/:code(.*)`}
+                                component={(props: any) => {
+                                    return <AuthorizedView accountType={value} authorizationCode={props.match.params.code} />
+                                }}
                             />;
                         })
                     }
