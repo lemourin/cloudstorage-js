@@ -2,11 +2,15 @@
 
 <head>
     <script>
-        const code = location.search.match(".*code=([^&]*)(&.*$|$)");
-        if (code) {
-            const state = location.search.match(".*state=([^\-]*)\-.*$");
-            if (state) {
-                document.location.hash = `/${state[1]}/${code[1]}`;
+        const state = location.search.match(".*state=([^\-]*)\-.*$");
+        if (state) {
+            const code = location.search.match(".*code=([^&]*)(&.*$|$)");
+            if (code) {
+                document.location.hash = `/authorized/${state[1]}/${code[1]}`;
+                document.location.search = "";
+            } else {
+                const error = location.search.match(".*error=([^&]*)(&.*$|$)");
+                document.location.hash = `/unauthorized/${state[1]}/${error[1]}`;
                 document.location.search = "";
             }
         }

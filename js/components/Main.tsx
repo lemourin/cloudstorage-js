@@ -71,19 +71,13 @@ export class Main extends React.Component<{}, MainState> {
                     <AppBar leftIcon="menu" onLeftIconClick={this.toggleDrawerActive} />
                     <Route path="/" exact component={TestingContent.bind(this)} />
                     <Route path="/add_account/" exact component={() => { return <AddAccount factory={this.state.factory} />; }} />
-                    {
-                        this.state.factory.availableProviders().map((value, _) => {
-                            return <Route
-                                key={value}
-                                path={`/${value}/:code(.*)`}
-                                component={(props: any) => {
-                                    return <AuthorizedView
-                                        accountType={value}
-                                        authorizationCode={decodeURIComponent(props.match.params.code)} />
-                                }}
-                            />;
-                        })
-                    }
+                    <Route path="/authorized/:accountType/:code(.*)" component={
+                        (props: any) => {
+                            return <AuthorizedView
+                                accountType={props.match.params.accountType}
+                                authorizationCode={decodeURIComponent(props.match.params.code)} />
+                        }
+                    } />
                 </Panel>
             </Layout>
         </Router>;
