@@ -7,6 +7,7 @@ import { Layout, NavDrawer, Panel } from "react-toolbox/lib/layout";
 import { List, ListItem } from "react-toolbox/lib/list";
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import { AddAccount } from "./AddAccount";
+import AuthorizedView from "./AuthorizedView";
 
 function TestingContent() {
     return <div style={{ flex: 1, overflowY: 'auto', padding: '1.8rem' }}>
@@ -70,6 +71,14 @@ export class Main extends React.Component<{}, MainState> {
                     <AppBar leftIcon="menu" onLeftIconClick={this.toggleDrawerActive} />
                     <Route path="/" exact component={TestingContent.bind(this)} />
                     <Route path="/add_account/" exact component={() => { return <AddAccount factory={this.state.factory} />; }} />
+                    {
+                        this.state.factory.availableProviders().map((value, _) => {
+                            return <Route
+                                path={"/" + value} exact
+                                component={(props: any) => { return <AuthorizedView accountType={value} search={props.location.search} /> }}
+                            />;
+                        })
+                    }
                 </Panel>
             </Layout>
         </Router>;
