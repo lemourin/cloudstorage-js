@@ -9,8 +9,8 @@ LIBS := \
 		${PWD}/../contrib/emscripten/lib/libjsoncpp.a \
 		${PWD}/../contrib/emscripten/lib/libtinyxml2.a
 
-cloudstorage-wasm.js: ${PWD}/../src/cloudstorage.cpp ${LIBS}
-	em++ ${PWD}/../src/cloudstorage.cpp -o cloudstorage-wasm.js \
+cloudstorage-wasm.js: cloudstorage.cpp ${LIBS}
+	em++ cloudstorage.cpp -o cloudstorage-wasm.js \
 		-std=c++14 \
 		-Oz \
 		-s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap", "UTF8ToString", "addFunction", "removeFunction"]' \
