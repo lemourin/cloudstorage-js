@@ -77,7 +77,9 @@ export class Main extends React.Component<{}, MainState> {
                                 key={value}
                                 path={`/${value}/:code(.*)`}
                                 component={(props: any) => {
-                                    return <AuthorizedView accountType={value} authorizationCode={props.match.params.code} />
+                                    return <AuthorizedView
+                                        accountType={value}
+                                        authorizationCode={decodeURIComponent(props.match.params.code)} />
                                 }}
                             />;
                         })
