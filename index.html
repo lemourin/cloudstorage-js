@@ -2,7 +2,7 @@
 
 <head>
     <script>
-        const state = location.search.match(".*state=([^\-]*)\-.*$");
+        const state = location.search.match(".*state=([^&]*)(&.*$|$)");
         if (state) {
             const code = location.search.match(".*code=([^&]*)(&.*$|$)");
             if (code) {
