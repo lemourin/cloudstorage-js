@@ -2,7 +2,7 @@
   "name": "cloudstorage-js",
   "scripts": {
     "build:contrib": "cd contrib && ./bootstrap",
-    "build:emscripten": "cd src && make && mv cloudstorage-wasm.* ../dist",
+    "build:emscripten": "cd src && make",
     "build": "webpack --mode=development",
     "build:release": "webpack --mode=production"
   },
