@@ -30,6 +30,10 @@ export class Main extends React.Component<{}, MainState> {
         authorizationAccountType: ""
     }
 
+    constructor(props: {}) {
+        super(props);
+    }
+
     toggleDrawerActive = () => {
         this.setState({ drawerActive: !this.state.drawerActive })
     }

@@ -213,6 +213,11 @@ void cloudFactoryRelease(const ICloudFactory* d) {
 }
 
 EMSCRIPTEN_KEEPALIVE
+bool cloudFactoryLoadConfig(ICloudFactory* d, const char* config) {
+  return d->loadConfig(std::istringstream(config));
+}
+
+EMSCRIPTEN_KEEPALIVE
 std::vector<std::string>* cloudFactoryAvailableProviders(
     const ICloudFactory* d) {
   return new std::vector<std::string>(d->availableProviders());

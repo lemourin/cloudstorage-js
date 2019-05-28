@@ -4,6 +4,7 @@ function cloudstorageApi() {
   return {
     cloudFactoryCreate: Module.cwrap("cloudFactoryCreate", "number", ["string"]),
     cloudFactoryRelease: Module.cwrap("cloudFactoryRelease", null, ["number"]),
+    cloudFactoryLoadConfig: Module.cwrap("cloudFactoryLoadConfig", "boolean", ["number", "string"]),
     cloudFactoryAvailableProvidersImpl: Module.cwrap("cloudFactoryAvailableProviders", "number", ["number"]),
     cloudFactoryCreateAccess: Module.cwrap("cloudFactoryCreateAccess", "number", ["number", "string", "string", "string"]),
     cloudFactoryAuthorizationUrl: Module.cwrap("cloudFactoryAuthorizationUrl", "number", ["number", "string"]),
@@ -158,5 +159,9 @@ export class CloudFactory {
 
   authorizeUrl(name: string) {
     return Cloud.string(this.api.cloudFactoryAuthorizationUrl(this.pointer, name));
+  }
+
+  loadConfig(config: any): boolean {
+    return this.api.cloudFactoryLoadConfig(this.pointer, JSON.stringify(config));
   }
 };
