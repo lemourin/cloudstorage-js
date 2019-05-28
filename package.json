@@ -3,9 +3,12 @@
   "scripts": {
     "build:contrib": "cd contrib && ./bootstrap",
     "build:emscripten": "cd dist && make",
-    "build": "npm run build:contrib && npm run build:emscripten && webpack --mode=development"
+    "build": "npm run build:contrib && npm run build:emscripten && webpack --mode=development",
+    "server": "ts-node ./server/Main.ts"
   },
   "devDependencies": {
+    "@types/express": "^4.16.1",
+    "@types/node": "^12.0.2",
     "css-loader": "^2.1.1",
     "dotenv": "^8.0.0",
     "postcss-loader": "^3.0.0",
@@ -16,10 +19,12 @@
     "webpack-cli": "^3.3.1"
   },
   "dependencies": {
+    "@types/dotenv": "^6.1.1",
     "@types/emscripten": "0.0.32",
     "@types/react": "^16.8.18",
     "@types/react-dom": "^16.8.4",
     "@types/react-router-dom": "^4.3.3",
+    "express": "^4.17.1",
     "postcss": "^7.0.16",
     "postcss-calc": "^7.0.1",
     "postcss-each": "^0.10.0",
@@ -29,6 +34,7 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-router-dom": "^5.0.0",
-    "react-toolbox": "^2.0.0-beta.13"
+    "react-toolbox": "^2.0.0-beta.13",
+    "ts-node-dev": "^1.0.0-pre.39"
   }
 }
