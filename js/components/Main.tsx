@@ -24,7 +24,7 @@ interface MainState {
 
 export class Main extends React.Component<{}, MainState> {
     state = {
-        factory: new CloudFactory(process.env.HOSTNAME),
+        factory: new CloudFactory(process.env.HOSTNAME!),
         drawerActive: false,
         authorizationCode: "",
         authorizationAccountType: ""
@@ -74,6 +74,7 @@ export class Main extends React.Component<{}, MainState> {
                     <Route path="/authorized/:accountType/:code(.*)" component={
                         (props: any) => {
                             return <AuthorizedView
+                                factory={this.state.factory}
                                 accountType={props.match.params.accountType}
                                 authorizationCode={decodeURIComponent(props.match.params.code)} />
                         }

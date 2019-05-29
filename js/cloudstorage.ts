@@ -6,8 +6,9 @@ function cloudstorageApi() {
     cloudFactoryRelease: Module.cwrap("cloudFactoryRelease", null, ["number"]),
     cloudFactoryLoadConfig: Module.cwrap("cloudFactoryLoadConfig", "boolean", ["number", "string"]),
     cloudFactoryAvailableProvidersImpl: Module.cwrap("cloudFactoryAvailableProviders", "number", ["number"]),
-    cloudFactoryCreateAccess: Module.cwrap("cloudFactoryCreateAccess", "number", ["number", "string", "string", "string"]),
-    cloudFactoryAuthorizationUrl: Module.cwrap("cloudFactoryAuthorizationUrl", "number", ["number", "string"]),
+    cloudFactoryCreateAccess: Module.cwrap("cloudFactoryCreateAccess", "number", ["number", "string", "string", "string", "string", "string"]),
+    cloudFactoryExchangeCode: Module.cwrap("cloudFactoryExchangeCode", null, ["number", "string", "string", "string", "string", "number"]),
+    cloudFactoryAuthorizationUrl: Module.cwrap("cloudFactoryAuthorizationUrl", "number", ["number", "string", "string", "string"]),
 
     cloudAccessListDirectoryPage: Module.cwrap("cloudAccessListDirectoryPage", null, ["number", "number", "string", "number"]),
     cloudAccessRelease: Module.cwrap("cloudAccessRelease", null, ["number"]),
@@ -31,6 +32,9 @@ function cloudstorageApi() {
 
     exceptionCode: Module.cwrap("exceptionCode", "number", ["number"]),
     exceptionDescription: Module.cwrap("exceptionDescription", "string", ["number"]),
+
+    tokenToken: Module.cwrap("tokenToken", "string", ["number"]),
+    tokenAccessToken: Module.cwrap("tokenAccessToken", "string", ["number"])
   };
 }
 
@@ -74,6 +78,15 @@ export class CloudError {
   constructor(code: number, description: string) {
     this.code = code;
     this.description = description;
+  }
+}
+
+export class CloudToken {
+  token: string
+  accessToken: string
+  constructor(token: string, accessToken: string) {
+    this.token = token;
+    this.accessToken = accessToken;
   }
 }
 
@@ -153,12 +166,47 @@ export class CloudFactory {
     return result;
   }
 
-  createAccess(name: string, token: string, accessToken = "") {
-    return new CloudAccess(this.api.cloudFactoryCreateAccess(this.pointer, name, token, accessToken));
+  createAccess(name: string, token: string, hints: any) {
+    return new CloudAccess(this.api.cloudFactoryCreateAccess(
+      this.pointer,
+      name,
+      token,
+      hints.accessToken ? hints.accessToken : "",
+      hints.redirectUri ? hints.redirectUri : "",
+      hints.state ? hints.state : ""
+    ));
   }
 
-  authorizeUrl(name: string) {
-    return Cloud.string(this.api.cloudFactoryAuthorizationUrl(this.pointer, name));
+  authorizeUrl(name: string, hints: any) {
+    return Cloud.string(this.api.cloudFactoryAuthorizationUrl(
+      this.pointer,
+      name,
+      hints.redirectUri ? hints.redirectUri : "",
+      hints.state ? hints.state : ""
+    ));
+  }
+
+
+  exchangeAuthorizationCode(name: string, hints: any, code: string): Promise<CloudToken> {
+    const api = this.api;
+    return new Promise((resolve, reject) => {
+      const exchangeCodeCallback = addFunction((error: number, tokenData: number) => {
+        if (tokenData !== 0) {
+          resolve(new CloudToken(api.tokenToken(tokenData), api.tokenAccessToken(tokenData)));
+        } else if (error !== 0) {
+          reject(new CloudError(api.exceptionCode(error), api.exceptionDescription(error)));
+        }
+        removeFunction(exchangeCodeCallback);
+      }, "vi");
+      api.cloudFactoryExchangeCode(
+        this.pointer,
+        name,
+        hints.redirectUri ? hints.redirectUri : "",
+        hints.state ? hints.state : "",
+        code,
+        exchangeCodeCallback
+      );
+    });
   }
 
   loadConfig(config: any): boolean {

@@ -2,6 +2,7 @@
 #include <cloudstorage/IThreadPool.h>
 #include <emscripten.h>
 #include <emscripten/fetch.h>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 
@@ -226,18 +227,47 @@ std::vector<std::string>* cloudFactoryAvailableProviders(
 EMSCRIPTEN_KEEPALIVE
 std::shared_ptr<ICloudAccess>* cloudFactoryCreateAccess(
     ICloudFactory* d, const char* name, const char* token,
-    const char* accessToken) {
+    const char* accessToken, const char* redirectUri, const char* state) {
   ICloudFactory::ProviderInitData data;
   data.token_ = token;
   data.permission_ = ICloudProvider::Permission::ReadWrite;
-  data.hints_["access_token"] = accessToken;
-  return new std::shared_ptr<ICloudAccess>(d->create(name, std::move(data)));
+  if (accessToken && strlen(accessToken) > 0)
+    data.hints_["access_token"] = accessToken;
+  if (redirectUri && strlen(redirectUri) > 0)
+    data.hints_["redirect_uri"] = redirectUri;
+  if (state && strlen(state) > 0) data.hints_["state"] = state;
+  auto result =
+      new std::shared_ptr<ICloudAccess>(d->create(name, std::move(data)));
+  return result;
 }
 
 EMSCRIPTEN_KEEPALIVE
 std::string* cloudFactoryAuthorizationUrl(const ICloudFactory* d,
-                                          const char* name) {
-  return new std::string(d->authorizationUrl(name));
+                                          const char* name,
+                                          const char* redirectUri,
+                                          const char* state) {
+  ICloudFactory::ProviderInitData data;
+  data.permission_ = ICloudProvider::Permission::ReadWrite;
+  if (redirectUri && strlen(redirectUri) > 0)
+    data.hints_["redirect_uri"] = redirectUri;
+  if (state && strlen(state) > 0) data.hints_["state"] = state;
+  return new std::string(d->authorizationUrl(name, data));
+}
+
+EMSCRIPTEN_KEEPALIVE
+void cloudFactoryExchangeCode(ICloudFactory* p, const char* name,
+                              const char* redirectUri, const char* state,
+                              const char* code,
+                              void (*callback)(const IException*,
+                                               const Token*)) {
+  ICloudFactory::ProviderInitData data;
+  data.permission_ = ICloudProvider::Permission::ReadWrite;
+  if (redirectUri && strlen(redirectUri) > 0)
+    data.hints_["redirect_uri"] = redirectUri;
+  if (state && strlen(state) > 0) data.hints_["state"] = state;
+  p->exchangeAuthorizationCode(name, data, code)
+      .then([callback](const Token& token) { callback(0, &token); })
+      .error<IException>([callback](const auto& e) { callback(&e, 0); });
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -270,13 +300,12 @@ void cloudAccessListDirectoryPage(std::shared_ptr<ICloudAccess>* p,
       .error<IException>([callback](const auto& e) { callback(&e, 0); });
 }
 
-EMSCRIPTEN_KEEPALIVE
-IItem::Pointer* cloudAccessRoot(const std::shared_ptr<ICloudAccess>* p) {
+EMSCRIPTEN_KEEPALIVE IItem::Pointer* cloudAccessRoot(
+    const std::shared_ptr<ICloudAccess>* p) {
   return new std::shared_ptr<IItem>((*p)->root());
 }
 
-EMSCRIPTEN_KEEPALIVE
-void itemRelease(IItem::Pointer* d) { delete d; }
+EMSCRIPTEN_KEEPALIVE void itemRelease(IItem::Pointer* d) { delete d; }
 
 EMSCRIPTEN_KEEPALIVE
 std::string* itemFilename(IItem::Pointer* d) {
@@ -302,4 +331,12 @@ int exceptionCode(IException* e) { return e->code(); }
 
 EMSCRIPTEN_KEEPALIVE
 const char* exceptionDescription(IException* e) { return e->what(); }
+
+EMSCRIPTEN_KEEPALIVE
+const char* tokenToken(const Token* d) { return d->token_.c_str(); }
+
+EMSCRIPTEN_KEEPALIVE
+const char* tokenAccessToken(const Token* d) {
+  return d->access_token_.c_str();
+}
 }
