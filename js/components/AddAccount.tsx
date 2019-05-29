@@ -9,14 +9,6 @@ interface AddAccountProps {
 };
 
 export class AddAccount extends React.Component<AddAccountProps, {}> {
-    patchUrl = (url: string) => {
-        const m = url.match(`^${process.env.HOSTNAME}/([^/]*)/login(.*)$`);
-        if (m)
-            return `/auth/${m![1]}`;
-        else
-            return url;
-    }
-
     render() {
         return <List>
             {this.props.factory.availableProviders().map((value, _) => {
@@ -25,11 +17,11 @@ export class AddAccount extends React.Component<AddAccountProps, {}> {
                     state: value
                 });
                 if (url.match(`^${process.env.HOSTNAME}.*$`))
-                    return <Link key={`${value}-internal`} to={this.patchUrl(url)}>
+                    return <Link key={`${value}-internal`} to={`/auth/${value}`}>
                         <ListItem caption={value} />
                     </Link>
                 else
-                    return <a key={`${value}-external`} href={this.patchUrl(url)}>
+                    return <a key={`${value}-external`} href={url}>
                         <ListItem caption={value} />
                     </a>;
             })}
