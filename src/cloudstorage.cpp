@@ -236,9 +236,7 @@ std::shared_ptr<ICloudAccess>* cloudFactoryCreateAccess(
   if (redirectUri && strlen(redirectUri) > 0)
     data.hints_["redirect_uri"] = redirectUri;
   if (state && strlen(state) > 0) data.hints_["state"] = state;
-  auto result =
-      new std::shared_ptr<ICloudAccess>(d->create(name, std::move(data)));
-  return result;
+  return new std::shared_ptr<ICloudAccess>(d->create(name, std::move(data)));
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -300,6 +298,15 @@ void cloudAccessListDirectoryPage(std::shared_ptr<ICloudAccess>* p,
       .error<IException>([callback](const auto& e) { callback(&e, 0); });
 }
 
+EMSCRIPTEN_KEEPALIVE
+void cloudAccessGeneralData(std::shared_ptr<ICloudAccess>* p,
+                            void (*callback)(const IException*,
+                                             const GeneralData*)) {
+  (*p)->generalData()
+      .then([callback](const GeneralData& d) { callback(0, &d); })
+      .error<IException>([callback](const auto& e) { callback(&e, 0); });
+}
+
 EMSCRIPTEN_KEEPALIVE IItem::Pointer* cloudAccessRoot(
     const std::shared_ptr<ICloudAccess>* p) {
   return new std::shared_ptr<IItem>((*p)->root());
@@ -339,4 +346,15 @@ EMSCRIPTEN_KEEPALIVE
 const char* tokenAccessToken(const Token* d) {
   return d->access_token_.c_str();
 }
+
+EMSCRIPTEN_KEEPALIVE
+const char* generalDataUserName(const GeneralData* d) {
+  return d->username_.c_str();
+}
+
+EMSCRIPTEN_KEEPALIVE
+uint64_t generalDataSpaceTotal(const GeneralData* d) { return d->space_total_; }
+
+EMSCRIPTEN_KEEPALIVE
+uint64_t generalDataSpaceUsed(const GeneralData* d) { return d->space_used_; }
 }

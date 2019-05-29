@@ -20,17 +20,35 @@ export default class AuthorizedView extends React.Component<AuthorizedViewProps,
 
     async componentDidMount() {
         try {
-            this.setState({
-                token: await this.props.factory.exchangeAuthorizationCode(
-                    this.props.accountType,
-                    {
-                        redirectUri: process.env.HOSTNAME,
-                        state: this.props.accountType
-                    },
-                    this.props.authorizationCode
-                )
+            const token = await this.props.factory.exchangeAuthorizationCode(
+                this.props.accountType,
+                {
+                    redirectUri: process.env.HOSTNAME,
+                    state: this.props.accountType
+                },
+                this.props.authorizationCode
+            );
+
+            const access = this.props.factory.createAccess(this.props.accountType, token.token, {
+                accessToken: token.accessToken,
+                redirectUri: process.env.HOSTNAME,
+                state: this.props.accountType
             });
+
+            this.setState({ token });
+
+            try {
+                const data = await access.generalData();
+                console.log(data.userName, data.spaceUsed, data.spaceTotal);
+            } catch (e) {
+                console.log("general data failed");
+                throw e;
+            } finally {
+                access.destroy();
+            }
         } catch (e) {
+            console.log(e);
+            throw e;
             this.setState({ error: e });
         }
     }

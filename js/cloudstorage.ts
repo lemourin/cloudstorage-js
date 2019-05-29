@@ -11,6 +11,7 @@ function cloudstorageApi() {
     cloudFactoryAuthorizationUrl: Module.cwrap("cloudFactoryAuthorizationUrl", "number", ["number", "string", "string", "string"]),
 
     cloudAccessListDirectoryPage: Module.cwrap("cloudAccessListDirectoryPage", null, ["number", "number", "string", "number"]),
+    cloudAccessGeneralData: Module.cwrap("cloudAccessGeneralData", null, ["number", "number"]),
     cloudAccessRelease: Module.cwrap("cloudAccessRelease", null, ["number"]),
     cloudAccessRoot: Module.cwrap("cloudAccessRoot", "number", ["number"]),
 
@@ -34,7 +35,11 @@ function cloudstorageApi() {
     exceptionDescription: Module.cwrap("exceptionDescription", "string", ["number"]),
 
     tokenToken: Module.cwrap("tokenToken", "string", ["number"]),
-    tokenAccessToken: Module.cwrap("tokenAccessToken", "string", ["number"])
+    tokenAccessToken: Module.cwrap("tokenAccessToken", "string", ["number"]),
+
+    generalDataUserName: Module.cwrap("generalDataUserName", "string", ["number"]),
+    generalDataSpaceUsed: Module.cwrap("generalDataSpaceUsed", "number", ["number"]),
+    generalDataSpaceTotal: Module.cwrap("generalDataSpaceTotal", "number", ["number"])
   };
 }
 
@@ -103,6 +108,18 @@ export class CloudPageData {
   }
 }
 
+export class CloudGeneralData {
+  userName: string
+  spaceUsed: number
+  spaceTotal: number
+
+  constructor(userName: string, spaceUsed: number, spaceTotal: number) {
+    this.userName = userName;
+    this.spaceUsed = spaceUsed;
+    this.spaceTotal = spaceTotal;
+  }
+}
+
 export class CloudAccess {
   api: any
   pointer: number
@@ -138,6 +155,25 @@ export class CloudAccess {
         removeFunction(listDirectoryCallback);
       }, "vii");
       api.cloudAccessListDirectoryPage(this.pointer, item.pointer, token, listDirectoryCallback);
+    });
+  }
+
+  generalData(): Promise<CloudGeneralData> {
+    const api = this.api;
+    return new Promise((resolve, reject) => {
+      const generalDataCallback = addFunction((error: number, generalData: number) => {
+        if (generalData !== 0) {
+          resolve(new CloudGeneralData(
+            api.generalDataUserName(generalData), 
+            api.generalDataSpaceUsed(generalData), 
+            api.generalDataSpaceTotal(generalData))
+          );
+        } else if (error !== 0) {
+          reject(new CloudError(api.exceptionCode(error), api.exceptionDescription(error)));
+        }
+        removeFunction(generalDataCallback);
+      }, "vii");
+      api.cloudAccessGeneralData(this.pointer, generalDataCallback);
     });
   }
 };
