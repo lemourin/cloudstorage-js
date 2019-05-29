@@ -9,14 +9,14 @@ interface AuthorizedViewProps {
 };
 
 interface AuthorizedViewState {
-    token: (CloudToken | null),
-    error: (CloudError | null)
+    error: (CloudError | null),
+    pending: boolean,
 }
 
 export default class AuthorizedView extends React.Component<AuthorizedViewProps, AuthorizedViewState> {
     state = {
-        token: null,
-        error: null
+        error: null,
+        pending: true
     }
 
     async componentDidMount() {
@@ -35,8 +35,6 @@ export default class AuthorizedView extends React.Component<AuthorizedViewProps,
                 redirectUri: process.env.HOSTNAME,
                 state: this.props.accountType
             });
-
-            this.setState({ token });
 
             try {
                 const data = await access.generalData();
@@ -57,13 +55,15 @@ export default class AuthorizedView extends React.Component<AuthorizedViewProps,
                 access.destroy();
             }
         } catch (e) {
-            this.setState({ error: e });
+            this.setState({ error: e, pending: false });
+        } finally {
+            this.setState({ pending: false });
         }
     }
 
     renderToken() {
-        if (!this.state.error && !this.state.token)
-            return <div>Exchange in progress</div>;
+        if (this.state.pending)
+            return <div>Verifying...</div>;
         else if (this.state.error !== null) {
             const error: CloudError = this.state.error!;
             return <div>Failed to exchange code {error.description}</div>;
@@ -73,7 +73,7 @@ export default class AuthorizedView extends React.Component<AuthorizedViewProps,
     }
 
     render() {
-        if (this.state.token)
+        if (!this.state.pending && !this.state.error)
             return <Redirect to="/" />;
         return <div>
             <div>Account type: {this.props.accountType}</div>
