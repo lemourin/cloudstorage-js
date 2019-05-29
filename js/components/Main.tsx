@@ -15,11 +15,19 @@ function TestingContent() {
     </div>
 }
 
+interface CloudAccount {
+    type: string,
+    label: string,
+    token: string,
+    accessToken: string
+}
+
 interface MainState {
     factory: CloudFactory,
     drawerActive: boolean,
     authorizationCode: string,
-    authorizationAccountType: string
+    authorizationAccountType: string,
+    accounts: CloudAccount[]
 };
 
 export class Main extends React.Component<{}, MainState> {
@@ -27,7 +35,8 @@ export class Main extends React.Component<{}, MainState> {
         factory: new CloudFactory(process.env.HOSTNAME!),
         drawerActive: false,
         authorizationCode: "",
-        authorizationAccountType: ""
+        authorizationAccountType: "",
+        accounts: JSON.parse(localStorage.getItem("accounts") || "[]")
     }
 
     constructor(props: {}) {
@@ -59,6 +68,12 @@ export class Main extends React.Component<{}, MainState> {
             <Layout>
                 <NavDrawer active={this.state.drawerActive} onOverlayClick={this.toggleDrawerActive}>
                     <List>
+                        {
+                            this.state.accounts.map((account: CloudAccount) => {
+                                const key = `${account.type}: ${account.label}`;
+                                return <ListItem key={key} caption={key} />;
+                            })
+                        }
                         <Link to="/add_account/">
                             <ListItem caption="Add account" />
                         </Link>

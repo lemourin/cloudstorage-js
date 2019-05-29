@@ -7,6 +7,7 @@ function cloudstorageApi() {
     cloudFactoryLoadConfig: Module.cwrap("cloudFactoryLoadConfig", "boolean", ["number", "string"]),
     cloudFactoryAvailableProvidersImpl: Module.cwrap("cloudFactoryAvailableProviders", "number", ["number"]),
     cloudFactoryCreateAccess: Module.cwrap("cloudFactoryCreateAccess", "number", ["number", "string", "string", "string", "string", "string"]),
+    cloudFactoryRemoveAccess: Module.cwrap("cloudFactoryRemoveAccess", null, ["number", "number"]),
     cloudFactoryExchangeCode: Module.cwrap("cloudFactoryExchangeCode", null, ["number", "string", "string", "string", "string", "number"]),
     cloudFactoryAuthorizationUrl: Module.cwrap("cloudFactoryAuthorizationUrl", "number", ["number", "string", "string", "string"]),
 
@@ -211,6 +212,10 @@ export class CloudFactory {
       hints.redirectUri ? hints.redirectUri : "",
       hints.state ? hints.state : ""
     ));
+  }
+
+  removeAccess(access: CloudAccess) {
+    this.api.cloudFactoryRemoveAccess(this.pointer, access.pointer);
   }
 
   authorizeUrl(name: string, hints: any) {

@@ -240,6 +240,12 @@ std::shared_ptr<ICloudAccess>* cloudFactoryCreateAccess(
 }
 
 EMSCRIPTEN_KEEPALIVE
+void cloudFactoryRemoveAccess(ICloudFactory* d,
+                              std::shared_ptr<ICloudAccess>* access) {
+  d->remove(*access);
+}
+
+EMSCRIPTEN_KEEPALIVE
 std::string* cloudFactoryAuthorizationUrl(const ICloudFactory* d,
                                           const char* name,
                                           const char* redirectUri,

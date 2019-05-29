@@ -1,5 +1,6 @@
 import * as React from "react";
 import { CloudFactory, CloudToken, CloudError } from "js/cloudstorage";
+import { HashRouter as Router, Redirect } from "react-router-dom";
 
 interface AuthorizedViewProps {
     factory: CloudFactory,
@@ -39,16 +40,23 @@ export default class AuthorizedView extends React.Component<AuthorizedViewProps,
 
             try {
                 const data = await access.generalData();
-                console.log(data.userName, data.spaceUsed, data.spaceTotal);
+                const json = JSON.parse(localStorage.getItem("accounts") || "[]");
+                if (!json.find((e: any) => { return e.type === this.props.accountType && e.label === data.userName; })) {
+                    json.push({
+                        type: this.props.accountType,
+                        label: data.userName,
+                        token: token.token,
+                        accessToken: token.accessToken
+                    });
+                    localStorage.setItem("accounts", JSON.stringify(json));
+                }
             } catch (e) {
-                console.log("general data failed");
                 throw e;
             } finally {
+                this.props.factory.removeAccess(access);
                 access.destroy();
             }
         } catch (e) {
-            console.log(e);
-            throw e;
             this.setState({ error: e });
         }
     }
@@ -60,15 +68,13 @@ export default class AuthorizedView extends React.Component<AuthorizedViewProps,
             const error: CloudError = this.state.error!;
             return <div>Failed to exchange code {error.description}</div>;
         } else {
-            const token: CloudToken = this.state.token!;
-            return <div>
-                <p>Token: {token.token}</p>
-                <p>AccessToken: {token.accessToken}</p>
-            </div>;
+            return null;
         }
     }
 
     render() {
+        if (this.state.token)
+            return <Redirect to="/" />;
         return <div>
             <div>Account type: {this.props.accountType}</div>
             <div>Code: {this.props.authorizationCode}</div>
