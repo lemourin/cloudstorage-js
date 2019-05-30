@@ -146,7 +146,7 @@ export class Main extends React.Component<MainProps, MainState> {
                             authorizationCode={decodeURIComponent(props.match.params.code)} />
                     }
                 } />
-                <Route path="/list/:accountType/:accountLabel/:path(.*)" component={
+                <Route path="/list/:accountType/:accountLabel([^/]*)/:path(.*)" component={
                     (props: any) => {
                         const access = this.access(props.match.params.accountType, decodeURIComponent(props.match.params.accountLabel));
                         return <ListView
