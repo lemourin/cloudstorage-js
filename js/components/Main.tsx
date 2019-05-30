@@ -8,6 +8,7 @@ import { List, ListItem } from "react-toolbox/lib/list";
 import { Route, Link } from "react-router-dom";
 import { AddAccount } from "./AddAccount";
 import AuthorizedView from "./AuthorizedView";
+import AuthorizeView from "./AuthorizeView";
 
 export interface CloudAccount {
     type: string,
@@ -60,6 +61,14 @@ export class Main extends React.Component<MainProps, MainState> {
                 youtube: {
                     client_id: "291075523655-bjt77t9cbqkdsvfudovb5h1k8i3ak66i.apps.googleusercontent.com",
                     client_secret: "BdNvLHCAyiAPge_WHJ_oA5Sr"
+                },
+                pcloud: {
+                    client_id: "7HVDWAU1tGj",
+                    client_secret: "lTn56JN4jQXPh6T4MqJb88BSOhhy"
+                },
+                hubic: {
+                    client_id: "api_hubic_QviFuHPiH3XZouEUJuJ5NFnCzcG8Y0Cp",
+                    client_secret: "5D4M69qpIjyEHYOzbTs06olydCek5oUOvh1ROvWsHQbSOy9o1v3i2lUbygC7gzig"
                 }
             }
         });
@@ -97,6 +106,7 @@ export class Main extends React.Component<MainProps, MainState> {
             <Panel>
                 <AppBar leftIcon="menu" onLeftIconClick={this.toggleDrawerActive} />
                 <Route path="/add_account/" exact component={() => { return <AddAccount factory={this.state.factory} />; }} />
+                <Route path="/auth/:accountType" component={AuthorizeView}/>
                 <Route path="/authorized/:accountType/:code(.*)" component={
                     (props: any) => {
                         return <AuthorizedView
