@@ -303,6 +303,15 @@ void cloudAccessListDirectoryPage(ICloudAccess* p, IItem::Pointer* item,
 }
 
 EMSCRIPTEN_KEEPALIVE
+void cloudAccessGetItem(ICloudAccess* p, const char* path,
+                        void (*callback)(const IException*,
+                                         const IItem::Pointer*)) {
+  p->getItem(path)
+      .then([callback](const IItem::Pointer& e) { callback(0, &e); })
+      .error<IException>([callback](const auto& e) { callback(&e, 0); });
+};
+
+EMSCRIPTEN_KEEPALIVE
 void cloudAccessGeneralData(ICloudAccess* p,
                             void (*callback)(const IException*,
                                              const GeneralData*)) {
@@ -311,8 +320,17 @@ void cloudAccessGeneralData(ICloudAccess* p,
       .error<IException>([callback](const auto& e) { callback(&e, 0); });
 }
 
+EMSCRIPTEN_KEEPALIVE std::string* cloudAccessName(ICloudAccess* p) {
+  return new std::string(p->name());
+}
+
 EMSCRIPTEN_KEEPALIVE IItem::Pointer* cloudAccessRoot(ICloudAccess* p) {
   return new std::shared_ptr<IItem>(p->root());
+}
+
+EMSCRIPTEN_KEEPALIVE
+IItem::Pointer* itemCopy(IItem::Pointer* d) {
+  return new std::shared_ptr<IItem>(*d);
 }
 
 EMSCRIPTEN_KEEPALIVE void itemRelease(IItem::Pointer* d) { delete d; }

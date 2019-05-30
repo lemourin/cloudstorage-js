@@ -150,8 +150,8 @@ export class Main extends React.Component<MainProps, MainState> {
                     (props: any) => {
                         const access = this.access(props.match.params.accountType, decodeURIComponent(props.match.params.accountLabel));
                         return <ListView
+                            {...props}
                             access={access}
-                            root={access.root()}
                             path={`/${props.match.params.path}`} />
                     }
                 } />

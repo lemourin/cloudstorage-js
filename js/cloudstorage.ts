@@ -13,7 +13,9 @@ function cloudstorageApi() {
 
     cloudAccessListDirectoryPage: Module.cwrap("cloudAccessListDirectoryPage", null, ["number", "number", "string", "number"]),
     cloudAccessGeneralData: Module.cwrap("cloudAccessGeneralData", null, ["number", "number"]),
+    cloudAccessGetItem: Module.cwrap("cloudAccessGetItem", null, ["number", "string", "number"]),
     cloudAccessRoot: Module.cwrap("cloudAccessRoot", "number", ["number"]),
+    cloudAccessName: Module.cwrap("cloudAccessName", "number", ["number"]),
 
     vectorStringGet: Module.cwrap("vectorStringGet", "string", ["number", "number"]),
     vectorStringSize: Module.cwrap("vectorStringSize", "number", ["number"]),
@@ -26,6 +28,7 @@ function cloudstorageApi() {
     stringRelease: Module.cwrap("stringRelease", null, ["number"]),
 
     itemRelease: Module.cwrap("itemRelease", null, ["number"]),
+    itemCopy: Module.cwrap("itemCopy", "number", ["number"]),
     itemFilename: Module.cwrap("itemFilename", "number", ["number"]),
     itemId: Module.cwrap("itemId", "number", ["number"]),
 
@@ -79,6 +82,10 @@ export class CloudItem {
 
   id() {
     return Cloud.string(this.api.itemId(this.pointer));
+  }
+
+  copy() {
+    return new CloudItem(this.api.itemCopy(this.pointer));
   }
 };
 
@@ -137,6 +144,10 @@ export class CloudAccess {
     return new CloudItem(this.api.cloudAccessRoot(this.pointer));
   }
 
+  name() {
+    return Cloud.string(this.api.cloudAccessName(this.pointer));
+  }
+
   listDirectoryPage(item: CloudItem, token: string): Promise<CloudPageData> {
     const api = this.api;
     return new Promise((resolve, reject) => {
@@ -175,6 +186,21 @@ export class CloudAccess {
         removeFunction(generalDataCallback);
       }, "vii");
       api.cloudAccessGeneralData(this.pointer, generalDataCallback);
+    });
+  }
+
+  getItem(path: string): Promise<CloudItem> {
+    const api = this.api;
+    return new Promise((resolve, reject) => {
+      const getItemCallback = addFunction((error: number, item: number) => {
+        if (item !== 0) {
+          resolve(new CloudItem(item).copy());
+        } else if (error !== 0) {
+          reject(new CloudError(api.exceptionCode(error), api.exceptionDescription(error)));
+        }
+        removeFunction(getItemCallback);
+      }, "vii");
+      api.cloudAccessGetItem(this.pointer, path, getItemCallback);
     });
   }
 };
