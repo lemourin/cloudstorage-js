@@ -13,7 +13,6 @@ function cloudstorageApi() {
 
     cloudAccessListDirectoryPage: Module.cwrap("cloudAccessListDirectoryPage", null, ["number", "number", "string", "number"]),
     cloudAccessGeneralData: Module.cwrap("cloudAccessGeneralData", null, ["number", "number"]),
-    cloudAccessRelease: Module.cwrap("cloudAccessRelease", null, ["number"]),
     cloudAccessRoot: Module.cwrap("cloudAccessRoot", "number", ["number"]),
 
     vectorStringGet: Module.cwrap("vectorStringGet", "string", ["number", "number"]),
@@ -127,10 +126,6 @@ export class CloudAccess {
   constructor(pointer: number) {
     this.api = Cloud.api();
     this.pointer = pointer;
-  }
-
-  destroy() {
-    this.api.cloudAccessRelease(this.pointer);
   }
 
   root() {

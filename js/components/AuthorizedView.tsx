@@ -1,6 +1,6 @@
 import * as React from "react";
-import { CloudFactory, CloudToken, CloudError } from "js/cloudstorage";
-import { HashRouter as Router, Redirect } from "react-router-dom";
+import { CloudFactory, CloudError } from "js/cloudstorage";
+import { Redirect } from "react-router-dom";
 import { CloudAccount } from "./Main";
 
 interface AuthorizedViewProps {
@@ -56,7 +56,6 @@ export default class AuthorizedView extends React.Component<AuthorizedViewProps,
                 throw e;
             } finally {
                 this.props.factory.removeAccess(access);
-                access.destroy();
             }
         } catch (e) {
             this.setState({ error: e, pending: false });

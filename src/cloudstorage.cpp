@@ -225,9 +225,11 @@ std::vector<std::string>* cloudFactoryAvailableProviders(
 }
 
 EMSCRIPTEN_KEEPALIVE
-std::shared_ptr<ICloudAccess>* cloudFactoryCreateAccess(
-    ICloudFactory* d, const char* name, const char* token,
-    const char* accessToken, const char* redirectUri, const char* state) {
+ICloudAccess* cloudFactoryCreateAccess(ICloudFactory* d, const char* name,
+                                       const char* token,
+                                       const char* accessToken,
+                                       const char* redirectUri,
+                                       const char* state) {
   ICloudFactory::ProviderInitData data;
   data.token_ = token;
   data.permission_ = ICloudProvider::Permission::ReadWrite;
@@ -236,12 +238,11 @@ std::shared_ptr<ICloudAccess>* cloudFactoryCreateAccess(
   if (redirectUri && strlen(redirectUri) > 0)
     data.hints_["redirect_uri"] = redirectUri;
   if (state && strlen(state) > 0) data.hints_["state"] = state;
-  return new std::shared_ptr<ICloudAccess>(d->create(name, std::move(data)));
+  return d->create(name, std::move(data)).get();
 }
 
 EMSCRIPTEN_KEEPALIVE
-void cloudFactoryRemoveAccess(ICloudFactory* d,
-                              std::shared_ptr<ICloudAccess>* access) {
+void cloudFactoryRemoveAccess(ICloudFactory* d, ICloudAccess* access) {
   d->remove(*access);
 }
 
@@ -281,9 +282,6 @@ EMSCRIPTEN_KEEPALIVE
 void stringRelease(const std::string* d) { delete d; }
 
 EMSCRIPTEN_KEEPALIVE
-void cloudAccessRelease(std::shared_ptr<ICloudAccess>* d) { delete d; }
-
-EMSCRIPTEN_KEEPALIVE
 const char* vectorStringGet(const std::vector<std::string>* d, int index) {
   return (*d)[index].c_str();
 }
@@ -295,27 +293,26 @@ EMSCRIPTEN_KEEPALIVE
 void vectorStringRelease(const std::vector<std::string>* d) { delete d; }
 
 EMSCRIPTEN_KEEPALIVE
-void cloudAccessListDirectoryPage(std::shared_ptr<ICloudAccess>* p,
-                                  IItem::Pointer* item, const char* pageToken,
+void cloudAccessListDirectoryPage(ICloudAccess* p, IItem::Pointer* item,
+                                  const char* pageToken,
                                   void (*callback)(const IException*,
                                                    const PageData*)) {
-  (*p)->listDirectoryPage(*item, pageToken)
+  p->listDirectoryPage(*item, pageToken)
       .then([callback](const PageData& e) { callback(0, &e); })
       .error<IException>([callback](const auto& e) { callback(&e, 0); });
 }
 
 EMSCRIPTEN_KEEPALIVE
-void cloudAccessGeneralData(std::shared_ptr<ICloudAccess>* p,
+void cloudAccessGeneralData(ICloudAccess* p,
                             void (*callback)(const IException*,
                                              const GeneralData*)) {
-  (*p)->generalData()
+  p->generalData()
       .then([callback](const GeneralData& d) { callback(0, &d); })
       .error<IException>([callback](const auto& e) { callback(&e, 0); });
 }
 
-EMSCRIPTEN_KEEPALIVE IItem::Pointer* cloudAccessRoot(
-    const std::shared_ptr<ICloudAccess>* p) {
-  return new std::shared_ptr<IItem>((*p)->root());
+EMSCRIPTEN_KEEPALIVE IItem::Pointer* cloudAccessRoot(ICloudAccess* p) {
+  return new std::shared_ptr<IItem>(p->root());
 }
 
 EMSCRIPTEN_KEEPALIVE void itemRelease(IItem::Pointer* d) { delete d; }
