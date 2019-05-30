@@ -1,6 +1,7 @@
 import * as React from "react";
 import { CloudFactory, CloudToken, CloudError } from "js/cloudstorage";
 import { HashRouter as Router, Redirect } from "react-router-dom";
+import { CloudAccount } from "./Main";
 
 interface AuthorizedViewProps {
     factory: CloudFactory,
@@ -11,12 +12,14 @@ interface AuthorizedViewProps {
 interface AuthorizedViewState {
     error: (CloudError | null),
     pending: boolean,
+    accounts: CloudAccount[]
 }
 
 export default class AuthorizedView extends React.Component<AuthorizedViewProps, AuthorizedViewState> {
     state = {
         error: null,
-        pending: true
+        pending: true,
+        accounts: JSON.parse(localStorage.getItem("accounts") || "[]")
     }
 
     async componentDidMount() {
@@ -47,6 +50,7 @@ export default class AuthorizedView extends React.Component<AuthorizedViewProps,
                         accessToken: token.accessToken
                     });
                     localStorage.setItem("accounts", JSON.stringify(json));
+                    this.setState({ accounts: json });
                 }
             } catch (e) {
                 throw e;
@@ -73,8 +77,12 @@ export default class AuthorizedView extends React.Component<AuthorizedViewProps,
     }
 
     render() {
-        if (!this.state.pending && !this.state.error)
-            return <Redirect to="/" />;
+        if (!this.state.pending && !this.state.error) {
+            return <Redirect to={{
+                pathname: "/",
+                state: { accounts: this.state.accounts }
+            }} />;
+        }
         return <div>
             <div>Account type: {this.props.accountType}</div>
             <div>Code: {this.props.authorizationCode}</div>

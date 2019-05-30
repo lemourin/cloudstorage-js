@@ -5,21 +5,27 @@ import { CloudFactory } from "../cloudstorage";
 import { AppBar } from "react-toolbox/lib/app_bar";
 import { Layout, NavDrawer, Panel } from "react-toolbox/lib/layout";
 import { List, ListItem } from "react-toolbox/lib/list";
-import { HashRouter as Router, Route, Link } from "react-router-dom";
+import { Route, Link } from "react-router-dom";
 import { AddAccount } from "./AddAccount";
 import AuthorizedView from "./AuthorizedView";
 
-function TestingContent() {
-    return <div style={{ flex: 1, overflowY: 'auto', padding: '1.8rem' }}>
-        <p>Google auth url</p>
-    </div>
-}
-
-interface CloudAccount {
+export interface CloudAccount {
     type: string,
     label: string,
     token: string,
     accessToken: string
+}
+
+interface LocationState {
+    accounts: CloudAccount[]
+}
+
+interface LocationProps {
+    state: LocationState
+}
+
+interface MainProps {
+    location: LocationProps
 }
 
 interface MainState {
@@ -30,7 +36,7 @@ interface MainState {
     accounts: CloudAccount[]
 };
 
-export class Main extends React.Component<{}, MainState> {
+export class Main extends React.Component<MainProps, MainState> {
     state = {
         factory: new CloudFactory(process.env.HOSTNAME!),
         drawerActive: false,
@@ -39,7 +45,7 @@ export class Main extends React.Component<{}, MainState> {
         accounts: JSON.parse(localStorage.getItem("accounts") || "[]")
     }
 
-    constructor(props: {}) {
+    constructor(props: MainProps) {
         super(props);
         this.state.factory.loadConfig({
             keys: {
@@ -63,39 +69,43 @@ export class Main extends React.Component<{}, MainState> {
         this.setState({ drawerActive: !this.state.drawerActive })
     }
 
+    componentDidUpdate() {
+        if (this.props.location && this.props.location.state && this.props.location.state.accounts &&
+            this.props.location.state.accounts != this.state.accounts) {
+            this.setState({ accounts: this.props.location.state.accounts });
+        }
+    }
+
     render() {
-        return <Router>
-            <Layout>
-                <NavDrawer active={this.state.drawerActive} onOverlayClick={this.toggleDrawerActive}>
-                    <List>
-                        {
-                            this.state.accounts.map((account: CloudAccount) => {
-                                const key = `${account.type}: ${account.label}`;
-                                return <ListItem key={key} caption={key} />;
-                            })
-                        }
-                        <Link to="/add_account/">
-                            <ListItem caption="Add account" />
-                        </Link>
-                        <Link to="/">
-                            <ListItem caption="Main page" />
-                        </Link>
-                    </List>
-                </NavDrawer>
-                <Panel>
-                    <AppBar leftIcon="menu" onLeftIconClick={this.toggleDrawerActive} />
-                    <Route path="/" exact component={TestingContent.bind(this)} />
-                    <Route path="/add_account/" exact component={() => { return <AddAccount factory={this.state.factory} />; }} />
-                    <Route path="/authorized/:accountType/:code(.*)" component={
-                        (props: any) => {
-                            return <AuthorizedView
-                                factory={this.state.factory}
-                                accountType={props.match.params.accountType}
-                                authorizationCode={decodeURIComponent(props.match.params.code)} />
-                        }
-                    } />
-                </Panel>
-            </Layout>
-        </Router>;
+        return <Layout>
+            <NavDrawer active={this.state.drawerActive} onOverlayClick={this.toggleDrawerActive}>
+                <List>
+                    {
+                        this.state.accounts.map((account: CloudAccount) => {
+                            const key = `${account.type}: ${account.label}`;
+                            return <ListItem key={key} caption={key} />;
+                        })
+                    }
+                    <Link to="/add_account/">
+                        <ListItem caption="Add account" />
+                    </Link>
+                    <Link to="/">
+                        <ListItem caption="Main page" />
+                    </Link>
+                </List>
+            </NavDrawer>
+            <Panel>
+                <AppBar leftIcon="menu" onLeftIconClick={this.toggleDrawerActive} />
+                <Route path="/add_account/" exact component={() => { return <AddAccount factory={this.state.factory} />; }} />
+                <Route path="/authorized/:accountType/:code(.*)" component={
+                    (props: any) => {
+                        return <AuthorizedView
+                            factory={this.state.factory}
+                            accountType={props.match.params.accountType}
+                            authorizationCode={decodeURIComponent(props.match.params.code)} />
+                    }
+                } />
+            </Panel>
+        </Layout>;
     }
 }
