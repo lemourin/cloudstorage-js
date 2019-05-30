@@ -87,10 +87,10 @@ export class Main extends React.Component<MainProps, MainState> {
                         })
                     }
                     <Link to="/add_account/">
-                        <ListItem caption="Add account" />
+                        <ListItem caption="Add account" onClick={this.toggleDrawerActive} />
                     </Link>
                     <Link to="/">
-                        <ListItem caption="Main page" />
+                        <ListItem caption="Main page" onClick={this.toggleDrawerActive} />
                     </Link>
                 </List>
             </NavDrawer>
