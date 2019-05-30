@@ -6,10 +6,12 @@
         if (state) {
             const code = location.search.match(".*[\?&]code=([^&]*)(&.*$|$)");
             if (code) {
-                document.location.href = `/#/authorized/${state[1]}/${encodeURIComponent(decodeURIComponent(code[1]))}`;
+                document.location.hash = `/authorized/${state[1]}/${encodeURIComponent(decodeURIComponent(code[1]))}`;
+                document.location.search = "";
             } else {
                 const error = location.search.match(".*[\?&]error=([^&]*)(&.*$|$)");
-                document.location.href = `/#/unauthorized/${state[1]}/${encodeURIComponent(decodeURIComponent(error[1]))}`;
+                document.location.hash = `/unauthorized/${state[1]}/${encodeURIComponent(decodeURIComponent(error[1]))}`;
+                document.location.search = "";
             }
         }
     </script>
