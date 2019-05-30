@@ -323,6 +323,9 @@ std::string* itemFilename(IItem::Pointer* d) {
 }
 
 EMSCRIPTEN_KEEPALIVE
+std::string* itemId(IItem::Pointer* d) { return new std::string((*d)->id()); }
+
+EMSCRIPTEN_KEEPALIVE
 int vectorItemSize(const std::vector<IItem::Pointer>* d) { return d->size(); }
 
 EMSCRIPTEN_KEEPALIVE

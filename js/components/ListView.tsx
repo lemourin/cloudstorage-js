@@ -47,7 +47,7 @@ export default class ListView extends React.Component<ListViewProps, ListViewSta
             <List>
                 {
                     this.state.items.map((value: CloudItem) => {
-                        return <ListItem caption={value.filename()} />;
+                        return <ListItem key={value.id()} caption={value.filename()} />;
                     })
                 }
             </List>

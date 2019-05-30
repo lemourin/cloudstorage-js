@@ -27,6 +27,7 @@ function cloudstorageApi() {
 
     itemRelease: Module.cwrap("itemRelease", null, ["number"]),
     itemFilename: Module.cwrap("itemFilename", "number", ["number"]),
+    itemId: Module.cwrap("itemId", "number", ["number"]),
 
     pageDataItemList: Module.cwrap("pageDataItemList", "number", ["number"]),
     pageDataToken: Module.cwrap("pageDataToken", "string", ["number"]),
@@ -74,6 +75,10 @@ export class CloudItem {
 
   filename() {
     return Cloud.string(this.api.itemFilename(this.pointer));
+  }
+
+  id() {
+    return Cloud.string(this.api.itemId(this.pointer));
   }
 };
 
@@ -160,8 +165,8 @@ export class CloudAccess {
       const generalDataCallback = addFunction((error: number, generalData: number) => {
         if (generalData !== 0) {
           resolve(new CloudGeneralData(
-            api.generalDataUserName(generalData), 
-            api.generalDataSpaceUsed(generalData), 
+            api.generalDataUserName(generalData),
+            api.generalDataSpaceUsed(generalData),
             api.generalDataSpaceTotal(generalData))
           );
         } else if (error !== 0) {
