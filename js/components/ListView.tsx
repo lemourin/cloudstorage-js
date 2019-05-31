@@ -24,10 +24,12 @@ export default class ListView extends React.Component<ListViewProps, ListViewSta
     }
 
     clear() {
-        for (const d of this.state.items) {
-            d.destroy();
-        }
-        this.setState({ items: [] });
+        const array = this.state.items.slice();
+        this.setState({ items: [] }, () => {
+            for (const d of array) {
+                d.destroy();
+            }
+        });
     }
 
     componentDidMount() {
@@ -70,7 +72,10 @@ export default class ListView extends React.Component<ListViewProps, ListViewSta
 
     componentWillUnmount() {
         if (this.state.currentRoot) {
-            this.state.currentRoot.destroy();
+            const root = this.state.currentRoot;
+            this.setState({ currentRoot: undefined }, () => {
+                root.destroy();
+            });
         }
         this.clear();
     }
