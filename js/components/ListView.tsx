@@ -54,16 +54,19 @@ export default class ListView extends React.Component<ListViewProps, ListViewSta
         }
     }
 
-    async componentDidUpdate() {
+    async componentDidUpdate(prevProps: ListViewProps) {
         if (
             this.props.location.state && this.props.location.state.root && this.props.location.state.root != this.state.currentRoot
         ) {
             this.setState({ currentRoot: this.props.location.state.root });
             await this.updateList(this.props.location.state.root);
-        } else if (!this.state.currentRoot) {
+        } else if (!this.state.currentRoot || prevProps.access != this.props.access || prevProps.path != this.props.path) {
             try {
                 const currentRoot = await this.props.access.getItem(this.props.path);
-                this.setState({ currentRoot });
+                const previousRoot = this.state.currentRoot;
+                this.setState({ currentRoot }, () => {
+                    if (previousRoot) previousRoot.destroy();
+                });
                 await this.updateList(currentRoot);
             } catch (e) {
             }
