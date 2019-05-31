@@ -136,9 +136,9 @@ export class Main extends React.Component<MainProps, MainState> {
             </NavDrawer>
             <Panel>
                 <AppBar leftIcon="menu" onLeftIconClick={this.toggleDrawerActive} />
-                <Route path="/add_account/" exact component={() => { return <AddAccount factory={this.state.factory} />; }} />
+                <Route path="/add_account/" exact render={() => { return <AddAccount factory={this.state.factory} />; }} />
                 <Route path="/auth/:accountType" component={AuthorizeView} />
-                <Route path="/authorized/:accountType/:code(.*)" component={
+                <Route path="/authorized/:accountType/:code(.*)" render={
                     (props: any) => {
                         return <AuthorizedView
                             factory={this.state.factory}
@@ -146,7 +146,7 @@ export class Main extends React.Component<MainProps, MainState> {
                             authorizationCode={decodeURIComponent(props.match.params.code)} />
                     }
                 } />
-                <Route path="/list/:accountType/:accountLabel([^/]*)/:path(.*)" component={
+                <Route path="/list/:accountType/:accountLabel([^/]*)/:path(.*)" render={
                     (props: any) => {
                         const access = this.access(props.match.params.accountType, decodeURIComponent(props.match.params.accountLabel));
                         return <ListView
