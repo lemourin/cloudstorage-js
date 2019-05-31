@@ -11,7 +11,9 @@ interface ListViewProps {
 
 interface ListViewState {
     currentRoot: CloudItem | undefined
-    items: CloudItem[]
+    items: CloudItem[],
+    pending: boolean,
+    scheduledUpdate: boolean
 }
 
 export default class ListView extends React.Component<ListViewProps, ListViewState> {
@@ -19,7 +21,9 @@ export default class ListView extends React.Component<ListViewProps, ListViewSta
         super(props);
         this.state = {
             currentRoot: undefined,
-            items: []
+            items: [],
+            pending: false,
+            scheduledUpdate: false,
         }
     }
 
@@ -38,11 +42,15 @@ export default class ListView extends React.Component<ListViewProps, ListViewSta
 
     async updateList(root: CloudItem) {
         try {
+            this.setState({ pending: true });
             this.clear();
             let token = "";
             const items: CloudItem[] = [];
             while (true) {
                 const list = await this.props.access.listDirectoryPage(root, token);
+                if (this.state.scheduledUpdate) {
+                    break;
+                }
                 for (const d of list.items)
                     items.push(d);
                 this.setState({ items });
@@ -51,32 +59,46 @@ export default class ListView extends React.Component<ListViewProps, ListViewSta
                 token = list.nextToken;
             }
         } catch (e) {
+        } finally {
+            this.setState({ pending: false });
         }
     }
 
+    locationRoot = () => {
+        if (this.props.location.state && this.props.location.state.root)
+            return this.props.location.state.root;
+        return undefined;
+    }
+
     async componentDidUpdate(prevProps: ListViewProps) {
-        if (
-            this.props.location.state && this.props.location.state.root && this.props.location.state.root != this.state.currentRoot
-        ) {
-            this.setState({ currentRoot: this.props.location.state.root });
-            await this.updateList(this.props.location.state.root);
-        } else if (!this.state.currentRoot || prevProps.access != this.props.access || prevProps.path != this.props.path) {
-            try {
-                const currentRoot = await this.props.access.getItem(this.props.path);
-                const previousRoot = this.state.currentRoot;
-                this.setState({ currentRoot }, () => {
-                    if (previousRoot) previousRoot.destroy();
-                });
-                await this.updateList(currentRoot);
-            } catch (e) {
+        if (this.state.scheduledUpdate) {
+            if (!this.state.pending) {
+                if (this.locationRoot()) {
+                    this.setState({ currentRoot: this.locationRoot(), scheduledUpdate: false });
+                    await this.updateList(this.locationRoot());
+                } else {
+                    try {
+                        const currentRoot = await this.props.access.getItem(this.props.path);
+                        const previousRoot = this.state.currentRoot;
+                        this.setState({ currentRoot, scheduledUpdate: false }, () => {
+                            if (previousRoot) previousRoot.destroy();
+                        });
+                        await this.updateList(currentRoot);
+                    } catch (e) {
+                    }
+                }
             }
+        } else if (this.locationRoot() && this.locationRoot() != this.state.currentRoot) {
+            this.setState({ scheduledUpdate: true });
+        } else if (!this.state.currentRoot || prevProps.access != this.props.access || prevProps.path != this.props.path) {
+            this.setState({ scheduledUpdate: true });
         }
     }
 
     componentWillUnmount() {
         if (this.state.currentRoot) {
             const root = this.state.currentRoot;
-            this.setState({ currentRoot: undefined }, () => {
+            this.setState({ currentRoot: undefined, scheduledUpdate: true }, () => {
                 root.destroy();
             });
         }
