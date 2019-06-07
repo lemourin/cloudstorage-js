@@ -14,6 +14,7 @@ function cloudstorageApi() {
     cloudAccessListDirectoryPage: Module.cwrap("cloudAccessListDirectoryPage", null, ["number", "number", "string", "number"]),
     cloudAccessGeneralData: Module.cwrap("cloudAccessGeneralData", null, ["number", "number"]),
     cloudAccessGetItem: Module.cwrap("cloudAccessGetItem", null, ["number", "string", "number"]),
+    cloudAccessDownloadFile: Module.cwrap("cloudAccessDownloadFile", null, ["number", "number", "number", "number", "number"]),
     cloudAccessRoot: Module.cwrap("cloudAccessRoot", "number", ["number"]),
     cloudAccessName: Module.cwrap("cloudAccessName", "number", ["number"]),
 
@@ -201,6 +202,38 @@ export class CloudAccess {
         removeFunction(getItemCallback);
       }, "vii");
       api.cloudAccessGetItem(this.pointer, path, getItemCallback);
+    });
+  }
+
+  downloadFileChunk(item: CloudItem, start = 0, end = -1): Promise<Uint8Array> {
+    const api = this.api;
+    return new Promise((resolve, reject) => {
+      const downloadFileCallback = addFunction((error: number, array: number, size: number) => {
+        if (error !== 0) {
+          reject(new CloudError(api.exceptionCode(error), api.exceptionDescription(error)));
+        } else {
+          const result = [];
+          for (let i = 0; i < size; i++) {
+            result.push(Module.HEAPU8[array / Uint8Array.BYTES_PER_ELEMENT + i]);
+          }
+          resolve(new Uint8Array(result));
+        }
+        removeFunction(downloadFileCallback);
+      }, "viii");
+      api.cloudAccessDownloadFile(this.pointer, item.pointer, start, end, downloadFileCallback);
+    });
+  }
+
+  downloadFile(item: CloudItem, start = 0, end = -1): ReadableStream {
+    return new ReadableStream({
+      start(controller) {
+
+      },
+      pull(controller) {
+
+      },
+      cancel(controller) {
+      }
     });
   }
 };

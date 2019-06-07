@@ -84,7 +84,9 @@ export default class ListView extends React.Component<ListViewProps, ListViewSta
                             if (previousRoot) previousRoot.destroy();
                         });
                         await this.updateList(currentRoot);
+                        console.log(await this.props.access.downloadFileChunk(currentRoot));
                     } catch (e) {
+                        console.log("error", e);
                     }
                 }
             }

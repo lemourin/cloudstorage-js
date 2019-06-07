@@ -320,6 +320,28 @@ void cloudAccessGeneralData(ICloudAccess* p,
       .error<IException>([callback](const auto& e) { callback(&e, 0); });
 }
 
+EMSCRIPTEN_KEEPALIVE
+void cloudAccessDownloadFile(
+    ICloudAccess* p, IItem::Pointer* item, uint32_t start, uint32_t end,
+    void (*callback)(const IException*, const uint8_t* data, uint32_t size)) {
+  struct DownloadCallback : public ICloudDownloadCallback {
+    void receivedData(const char* data, uint32_t length) {
+      mData += std::string(data, length);
+    }
+    void progress(uint64_t, uint64_t) {}
+
+    std::string mData;
+  };
+  auto cb = std::make_shared<DownloadCallback>();
+  p->downloadFile(*item, Range{start, end == UINT32_MAX ? Range::Full : end},
+                  cb)
+      .then([callback, cb]() {
+        callback(nullptr, reinterpret_cast<const uint8_t*>(cb->mData.data()),
+                 cb->mData.size());
+      })
+      .error<IException>([callback](const auto& e) { callback(&e, 0, 0); });
+}
+
 EMSCRIPTEN_KEEPALIVE std::string* cloudAccessName(ICloudAccess* p) {
   return new std::string(p->name());
 }
