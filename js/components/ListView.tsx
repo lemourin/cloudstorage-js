@@ -84,9 +84,7 @@ export default class ListView extends React.Component<ListViewProps, ListViewSta
                             if (previousRoot) previousRoot.destroy();
                         });
                         await this.updateList(currentRoot);
-                        console.log(await this.props.access.downloadFileChunk(currentRoot));
                     } catch (e) {
-                        console.log("error", e);
                     }
                 }
             }
@@ -113,14 +111,17 @@ export default class ListView extends React.Component<ListViewProps, ListViewSta
             <List>
                 {
                     this.state.items.map((value: CloudItem) => {
-                        return <Link key={value.id()} to={{
-                            pathname: `${encodeURIComponent(value.filename())}/`,
-                            state: {
-                                root: value.copy()
-                            }
-                        }}>
-                            <ListItem caption={value.filename()} />
-                        </Link>;
+                        if (value.type() == "directory")
+                            return <Link key={value.id()} to={{
+                                pathname: `${encodeURIComponent(value.filename())}/`,
+                                state: {
+                                    root: value.copy()
+                                }
+                            }}>
+                                <ListItem caption={value.filename()} />
+                            </Link>;
+                        else
+                            return <ListItem key={value.id()} caption={value.filename()} />
                     })
                 }
             </List>

@@ -366,6 +366,25 @@ EMSCRIPTEN_KEEPALIVE
 std::string* itemId(IItem::Pointer* d) { return new std::string((*d)->id()); }
 
 EMSCRIPTEN_KEEPALIVE
+uint32_t itemSize(IItem::Pointer* d) { return (*d)->size(); }
+
+EMSCRIPTEN_KEEPALIVE
+const char* itemType(IItem::Pointer* d) {
+  switch ((*d)->type()) {
+    case IItem::FileType::Audio:
+      return "audio";
+    case IItem::FileType::Video:
+      return "video";
+    case IItem::FileType::Directory:
+      return "directory";
+    case IItem::FileType::Image:
+      return "image";
+    default:
+      return "unknown";
+  }
+}
+
+EMSCRIPTEN_KEEPALIVE
 int vectorItemSize(const std::vector<IItem::Pointer>* d) { return d->size(); }
 
 EMSCRIPTEN_KEEPALIVE

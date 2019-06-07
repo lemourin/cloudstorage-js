@@ -31,6 +31,8 @@ function cloudstorageApi() {
     itemRelease: Module.cwrap("itemRelease", null, ["number"]),
     itemCopy: Module.cwrap("itemCopy", "number", ["number"]),
     itemFilename: Module.cwrap("itemFilename", "number", ["number"]),
+    itemSize: Module.cwrap("itemSize", "number", ["number"]),
+    itemType: Module.cwrap("itemType", "string", ["number"]),
     itemId: Module.cwrap("itemId", "number", ["number"]),
 
     pageDataItemList: Module.cwrap("pageDataItemList", "number", ["number"]),
@@ -87,6 +89,14 @@ export class CloudItem {
 
   copy() {
     return new CloudItem(this.api.itemCopy(this.pointer));
+  }
+
+  size() {
+    return this.api.itemSize(this.pointer);
+  }
+
+  type() {
+    return this.api.itemType(this.pointer);
   }
 };
 
@@ -225,14 +235,14 @@ export class CloudAccess {
   }
 
   downloadFile(item: CloudItem, start = 0, end = -1): ReadableStream {
+    const CHUNK_SIZE = 4096;
     return new ReadableStream({
       start(controller) {
 
       },
       pull(controller) {
-
       },
-      cancel(controller) {
+      cancel(reason) {
       }
     });
   }
