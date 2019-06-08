@@ -222,7 +222,7 @@ export class CloudAccess {
         if (error !== 0) {
           reject(new CloudError(api.exceptionCode(error), api.exceptionDescription(error)));
         } else {
-          const result = [];
+          const result: number[] = [];
           for (let i = 0; i < size; i++) {
             result.push(Module.HEAPU8[array / Uint8Array.BYTES_PER_ELEMENT + i]);
           }
@@ -238,7 +238,6 @@ export class CloudAccess {
     const CHUNK_SIZE = 4096;
     return new ReadableStream({
       start(controller) {
-
       },
       pull(controller) {
       },
@@ -264,7 +263,7 @@ export class CloudFactory {
     const api = this.api;
     const providers = api.cloudFactoryAvailableProvidersImpl(this.pointer);
     const count = api.vectorStringSize(providers);
-    const result = [];
+    const result: string[] = [];
     for (let i = 0; i < count; i++) {
       result.push(api.vectorStringGet(providers, i));
     }

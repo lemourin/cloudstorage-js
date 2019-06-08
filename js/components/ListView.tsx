@@ -7,6 +7,7 @@ interface ListViewProps {
     access: CloudAccess
     path: string
     location: any
+    match: any
 }
 
 interface ListViewState {
@@ -120,6 +121,19 @@ export default class ListView extends React.Component<ListViewProps, ListViewSta
                             }}>
                                 <ListItem caption={value.filename()} />
                             </Link>;
+                        else if (value.type() == "video")
+                            return <Link key={value.id()} to={{
+                                pathname:
+                                    `/view-item/` +
+                                    `${this.props.match.params.accountType}/` +
+                                    `${encodeURIComponent(this.props.match.params.accountLabel)}/` +
+                                    `${encodeURIComponent(this.props.path + value.filename())}`,
+                                state: {
+                                    item: value.copy()
+                                }
+                            }}>
+                                <ListItem caption={value.filename()} />
+                            </Link>
                         else
                             return <ListItem key={value.id()} caption={value.filename()} />
                     })

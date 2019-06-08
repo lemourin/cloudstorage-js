@@ -10,6 +10,7 @@ import { AddAccount } from "./AddAccount";
 import AuthorizedView from "./AuthorizedView";
 import AuthorizeView from "./AuthorizeView";
 import ListView from "./ListView";
+import ViewItem from "./ViewItem";
 
 export interface CloudAccount {
     type: string,
@@ -153,6 +154,16 @@ export class Main extends React.Component<MainProps, MainState> {
                             {...props}
                             access={access}
                             path={`/${props.match.params.path}`} />
+                    }
+                } />
+                <Route path="/view-item/:accountType/:accountLabel([^/]*)/:path(.*)" render={
+                    (props: any) => {
+                        const access = this.access(props.match.params.accountType, decodeURIComponent(props.match.params.accountLabel));
+                        return <ViewItem
+                            {...props}
+                            access={access}
+                            path={`${decodeURIComponent(props.match.params.path)}`}
+                        />
                     }
                 } />
             </Panel>
