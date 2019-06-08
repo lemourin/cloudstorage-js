@@ -35,6 +35,7 @@
     "react-dom": "^16.8.6",
     "react-router-dom": "^5.0.0",
     "react-toolbox": "^2.0.0-beta.13",
-    "ts-node-dev": "^1.0.0-pre.39"
+    "ts-node-dev": "^1.0.0-pre.39",
+    "videostream": "git+https://github.com/meganz/videostream.git"
   }
 }
