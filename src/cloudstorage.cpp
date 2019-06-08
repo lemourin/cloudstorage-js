@@ -4,6 +4,7 @@
 #include <emscripten/fetch.h>
 #include <cstring>
 #include <iostream>
+#include <regex>
 #include <sstream>
 
 using namespace cloudstorage;
@@ -11,6 +12,8 @@ using namespace cloudstorage;
 namespace {
 
 namespace priv {
+
+uint32_t gCurrentFileSize;
 
 template <class... Ts>
 struct dump;
@@ -51,6 +54,8 @@ struct JSHttp : public IHttp {
   struct HttpRequest : public IHttpRequest {
     struct UserData {
       CompleteCallback mOnCompleted;
+      IHttpRequest::HeaderParameters mRequestHeaders;
+      uint32_t mCurrentFileSize;
       std::string mData;
       std::shared_ptr<std::ostream> mResponse;
       std::shared_ptr<std::ostream> mErrorStream;
@@ -107,8 +112,10 @@ struct JSHttp : public IHttp {
       attr.requestHeaders = headerData.data();
       std::stringstream storage;
       storage << data->rdbuf();
-      attr.userData = new UserData{onCompleted, storage.str(), response,
-                                   errorStream, callback};
+      attr.userData =
+          new UserData{onCompleted,   mHeaderParameters, priv::gCurrentFileSize,
+                       storage.str(), response,          errorStream,
+                       callback};
       attr.onsuccess = onExecuted;
       attr.onerror = onExecuted;
       attr.requestData = static_cast<UserData*>(attr.userData)->mData.c_str();
@@ -137,6 +144,18 @@ struct JSHttp : public IHttp {
       if (f->numBytes > 0) {
         response.headers_.insert(
             {"content-length", std::to_string(f->numBytes)});
+        for (const auto& d : userdata->mRequestHeaders) {
+          if (d.first == "Range") {
+            std::regex regex(R"(bytes=(\d*)-(\d*))");
+            std::smatch match;
+            if (std::regex_match(d.second, match, regex)) {
+              response.headers_.insert(
+                  {"content-range",
+                   "bytes " + match[1].str() + "-" + match[2].str() + "/" +
+                       std::to_string(userdata->mCurrentFileSize)});
+            };
+          }
+        }
         if (userdata->mCallback->isSuccess(f->status, {})) {
           *response.output_stream_ << std::string(f->data, f->numBytes);
         } else {
@@ -186,6 +205,11 @@ ICloudFactory* gCloudFactory;
 }  // namespace
 
 extern "C" {
+EMSCRIPTEN_KEEPALIVE
+void cloudFactorySetCurrentFileSize(uint32_t size) {
+  priv::gCurrentFileSize = size;
+}
+
 EMSCRIPTEN_KEEPALIVE
 ICloudFactory* cloudFactoryCreate(const char* hostname) {
   static bool initialized;

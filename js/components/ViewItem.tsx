@@ -32,14 +32,11 @@ export default class ViewItem extends React.Component<ViewItemProps, ViewItemSta
     }
 
     initializeStream(item: CloudItem) {
-        console.log(VideoStream);
         const access = this.props.access;
         const stream = new VideoStream({
             createReadStream(opts: any) {
                 const { start, end } = opts;
-                const stream = access.downloadFile(item, start, end);
-                console.log(stream);
-                return stream;
+                return access.downloadFile(item, start, end)
             }
         }, document.getElementById("video"));
     }
@@ -82,8 +79,8 @@ export default class ViewItem extends React.Component<ViewItemProps, ViewItemSta
 
     render() {
         return <div>
-            Video preview
-            <video id="video"></video>
+            <video style={{ display: "flex", justifyContent: "center", margin: "auto" }}
+                id="video" width="80%" height="80%" controls />
         </div>
     }
 }

@@ -1,4 +1,4 @@
-"use-strict"
+import * as ReadableStream from "readable-stream";
 
 function cloudstorageApi() {
   return {
@@ -10,6 +10,7 @@ function cloudstorageApi() {
     cloudFactoryRemoveAccess: Module.cwrap("cloudFactoryRemoveAccess", null, ["number", "number"]),
     cloudFactoryExchangeCode: Module.cwrap("cloudFactoryExchangeCode", null, ["number", "string", "string", "string", "string", "number"]),
     cloudFactoryAuthorizationUrl: Module.cwrap("cloudFactoryAuthorizationUrl", "number", ["number", "string", "string", "string"]),
+    cloudFactorySetCurrentFileSize: Module.cwrap("cloudFactorySetCurrentFileSize", null, ["number"]),
 
     cloudAccessListDirectoryPage: Module.cwrap("cloudAccessListDirectoryPage", null, ["number", "number", "string", "number"]),
     cloudAccessGeneralData: Module.cwrap("cloudAccessGeneralData", null, ["number", "number"]),
@@ -230,18 +231,31 @@ export class CloudAccess {
         }
         removeFunction(downloadFileCallback);
       }, "viii");
+      api.cloudFactorySetCurrentFileSize(item.size());
       api.cloudAccessDownloadFile(this.pointer, item.pointer, start, end, downloadFileCallback);
     });
   }
 
-  downloadFile(item: CloudItem, start = 0, end = -1): ReadableStream {
-    const CHUNK_SIZE = 4096;
-    return new ReadableStream({
-      start(controller) {
+  downloadFile(item: CloudItem, start = 0, end = -1): ReadableStream.Readable {
+    const CHUNK_SIZE = 1 * 1024 * 1024;
+    const e = end == -1 ? item.size() - start + 1 : start;
+    const access = this;
+    const i = item.copy();
+    let currentPosition = start;
+    return new ReadableStream.Readable({
+      async read(size: number) {
+        const currentRead = Math.min(CHUNK_SIZE, Math.max(e - currentPosition + 1, 0));
+        if (currentRead == 0) {
+          this.push(null);
+        } else {
+          console.log("asking for", currentRead, "bytes");
+          const data = await access.downloadFileChunk(i, currentPosition, currentRead);
+          this.push(data);
+          currentPosition += currentRead;
+        }
       },
-      pull(controller) {
-      },
-      cancel(reason) {
+      destroy() {
+        i.destroy();
       }
     });
   }

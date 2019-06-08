@@ -24,6 +24,7 @@
     "@types/react": "^16.8.18",
     "@types/react-dom": "^16.8.4",
     "@types/react-router-dom": "^4.3.3",
+    "@types/readable-stream": "^2.3.1",
     "express": "^4.17.1",
     "postcss": "^7.0.16",
     "postcss-calc": "^7.0.1",
@@ -35,6 +36,7 @@
     "react-dom": "^16.8.6",
     "react-router-dom": "^5.0.0",
     "react-toolbox": "^2.0.0-beta.13",
+    "readable-stream": "^3.4.0",
     "ts-node-dev": "^1.0.0-pre.39",
     "videostream": "^3.2.0"
   }
