@@ -41,7 +41,19 @@ void print(Ts... args) {
 }
 
 struct DummyThreadPool : public IThreadPool {
-  void schedule(const Task& f) override { f(); }
+  void schedule(const Task& f,
+                const std::chrono::system_clock::time_point& when) override {
+    auto timeout = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       when - std::chrono::system_clock::now())
+                       .count();
+    emscripten_async_call(
+        [](void* d) {
+          auto task = reinterpret_cast<Task*>(d);
+          (*task)();
+          delete task;
+        },
+        new Task(f), timeout);
+  }
 };
 
 struct DummyThreadPoolFactory : public IThreadPoolFactory {
