@@ -248,14 +248,13 @@ export class CloudAccess {
         if (currentRead == 0) {
           this.push(null);
         } else {
-          console.log("asking for", currentRead, "bytes");
           const data = await access.downloadFileChunk(i, currentPosition, currentRead);
           this.push(data);
           currentPosition += currentRead;
         }
       },
       destroy() {
-        i.destroy();
+        // i.destroy();
       }
     });
   }

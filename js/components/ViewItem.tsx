@@ -33,7 +33,7 @@ export default class ViewItem extends React.Component<ViewItemProps, ViewItemSta
 
     initializeStream(item: CloudItem) {
         const access = this.props.access;
-        const stream = new VideoStream({
+        new VideoStream({
             createReadStream(opts: any) {
                 const { start, end } = opts;
                 return access.downloadFile(item, start, end)
