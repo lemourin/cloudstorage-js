@@ -137,6 +137,7 @@ fetch_megasdk() {
 }
 
 install_megasdk() {
+  sed -i "s/m_clock_getmonotonictime(\&ts)/clock_gettime(CLOCK_MONOTONIC, \&ts)/g" src/posix/waiter.cpp
   ./autogen.sh
   emconfigure ./configure --prefix=$INSTALL_PATH \
     --without-freeimage \
