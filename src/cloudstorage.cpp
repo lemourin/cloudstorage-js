@@ -46,13 +46,17 @@ struct DummyThreadPool : public IThreadPool {
     auto timeout = std::chrono::duration_cast<std::chrono::milliseconds>(
                        when - std::chrono::system_clock::now())
                        .count();
-    emscripten_async_call(
-        [](void* d) {
-          auto task = reinterpret_cast<Task*>(d);
-          (*task)();
-          delete task;
-        },
-        new Task(f), timeout);
+    if (timeout > 0) {
+      emscripten_async_call(
+          [](void* d) {
+            auto task = reinterpret_cast<Task*>(d);
+            (*task)();
+            delete task;
+          },
+          new Task(f), timeout);
+    } else {
+      f();
+    }
   }
 };
 
