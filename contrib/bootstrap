@@ -117,7 +117,7 @@ fetch_curl() {
 }
 
 install_curl() {
-  emconfigure ./configure --prefix=$INSTALL_PATH --enable-static --disable-shared
+  emconfigure ./configure --prefix=$INSTALL_PATH --enable-static --disable-shared --with-ssl
   run_make
 }
 
