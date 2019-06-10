@@ -238,7 +238,7 @@ export class CloudAccess {
 
   downloadFile(item: CloudItem, start = 0, end = -1): ReadableStream.Readable {
     const CHUNK_SIZE = 1 * 1024 * 1024;
-    const e = end == -1 ? item.size() - start + 1 : start;
+    const e = end == -1 ? item.size() - 1 : end;
     const access = this;
     const i = item.copy();
     let currentPosition = start;
