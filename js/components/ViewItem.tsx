@@ -11,6 +11,7 @@ interface ViewItemProps {
 
 interface ViewItemState {
     currentItem: CloudItem | undefined,
+    videoStream: any,
     scheduledUpdate: boolean,
     pending: boolean
 }
@@ -22,6 +23,7 @@ export default class ViewItem extends React.Component<ViewItemProps, ViewItemSta
             currentItem: undefined,
             pending: false,
             scheduledUpdate: false,
+            videoStream: undefined
         }
     }
 
@@ -33,12 +35,17 @@ export default class ViewItem extends React.Component<ViewItemProps, ViewItemSta
 
     initializeStream(item: CloudItem) {
         const access = this.props.access;
-        new VideoStream({
-            createReadStream(opts: any) {
-                const { start, end } = opts;
-                return access.downloadFile(item, start, end)
-            }
-        }, document.getElementById("video"));
+        const previousStream = this.state.videoStream;
+        this.setState({
+            videoStream: new VideoStream({
+                createReadStream(opts: any) {
+                    const { start, end } = opts;
+                    return access.downloadFile(item, start, end)
+                }
+            }, document.getElementById("video"))
+        }, () => {
+            if (previousStream) previousStream.destroy();
+        });
     }
 
     componentDidMount() {
@@ -74,6 +81,12 @@ export default class ViewItem extends React.Component<ViewItemProps, ViewItemSta
             this.setState({ currentItem: undefined, scheduledUpdate: true }, () => {
                 item.destroy();
             });
+        }
+        if (this.state.videoStream) {
+            const stream = this.state.videoStream;
+            this.setState({ videoStream: undefined }, () => {
+                stream.destroy();
+            })
         }
     }
 
