@@ -1,10 +1,11 @@
 {
   "name": "cloudstorage-js",
   "scripts": {
-    "build:contrib": "cd contrib && ./bootstrap",
-    "build:emscripten": "cd src && make",
+    "build:contrib": ". \"$(cat .env | grep EMSDK_HOME | sed -E \"s/EMSDK_HOME=(.*)/\\1/\")/emsdk_set_env.sh\" && cd contrib && ./bootstrap",
+    "build:emscripten": ". \"$(cat .env | grep EMSDK_HOME | sed -E \"s/EMSDK_HOME=(.*)/\\1/\")/emsdk_set_env.sh\" && cd src && make",
     "build": "webpack --mode=development",
-    "build:release": "webpack --mode=production"
+    "build:release": "webpack --mode=production",
+    "build:all": "npm run build && npm run build:contrib && npm run build:emscripten"
   },
   "devDependencies": {
     "@types/express": "^4.16.1",
