@@ -150,6 +150,7 @@ install_megasdk() {
     --with-cares=$INSTALL_PATH \
     --with-sqlite=$INSTALL_PATH \
     --with-curl=$INSTALL_PATH \
+    --disable-curl-checks \
     LDFLAGS="-s ERROR_ON_UNDEFINED_SYMBOLS=0" \
     CXXFLAGS=-std=c++14
   run_make
