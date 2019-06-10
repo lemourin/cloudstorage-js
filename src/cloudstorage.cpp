@@ -40,6 +40,19 @@ void print(Ts... args) {
   EM_ASM({ console.log(Module.UTF8ToString($0)); }, stream.str().c_str());
 }
 
+ICloudFactory* gCloudFactory;
+bool gExecPending;
+
+void processEvents() {
+  if (gCloudFactory) {
+    if (!gExecPending) {
+      gExecPending = true;
+      gCloudFactory->processEvents();
+      gExecPending = false;
+    }
+  }
+}
+
 struct DummyThreadPool : public IThreadPool {
   void schedule(const Task& f,
                 const std::chrono::system_clock::time_point& when) override {
@@ -52,10 +65,12 @@ struct DummyThreadPool : public IThreadPool {
             auto task = reinterpret_cast<Task*>(d);
             (*task)();
             delete task;
+            processEvents();
           },
           new Task(f), timeout);
     } else {
       f();
+      processEvents();
     }
   }
 };
@@ -181,6 +196,7 @@ struct JSHttp : public IHttp {
       userdata->mOnCompleted(response);
       delete userdata;
       emscripten_fetch_close(f);
+      processEvents();
     }
 
     std::string mUrl;
@@ -216,8 +232,6 @@ struct CloudFactoryCallback : public ICloudFactory::ICallback {
   void onEventsAdded() override {}
 };
 
-ICloudFactory* gCloudFactory;
-
 }  // namespace
 
 extern "C" {
@@ -237,11 +251,6 @@ ICloudFactory* cloudFactoryCreate(const char* hostname) {
                             std::make_unique<DummyThreadPoolFactory>(),
                             std::make_unique<CloudFactoryCallback>()})
                         .release();
-    emscripten_set_main_loop(
-        [] {
-          if (gCloudFactory) gCloudFactory->processEvents();
-        },
-        0, 0);
     initialized = true;
   }
   return gCloudFactory;
@@ -313,6 +322,7 @@ void cloudFactoryExchangeCode(ICloudFactory* p, const char* name,
   p->exchangeAuthorizationCode(name, data, code)
       .then([callback](const Token& token) { callback(0, &token); })
       .error<IException>([callback](const auto& e) { callback(&e, 0); });
+  processEvents();
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -340,6 +350,7 @@ void cloudAccessListDirectoryPage(ICloudAccess* p, IItem::Pointer* item,
   p->listDirectoryPage(*item, pageToken)
       .then([callback](const PageData& e) { callback(0, &e); })
       .error<IException>([callback](const auto& e) { callback(&e, 0); });
+  processEvents();
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -349,6 +360,7 @@ void cloudAccessGetItem(ICloudAccess* p, const char* path,
   p->getItem(path)
       .then([callback](const IItem::Pointer& e) { callback(0, &e); })
       .error<IException>([callback](const auto& e) { callback(&e, 0); });
+  processEvents();
 };
 
 EMSCRIPTEN_KEEPALIVE
@@ -358,6 +370,7 @@ void cloudAccessGeneralData(ICloudAccess* p,
   p->generalData()
       .then([callback](const GeneralData& d) { callback(0, &d); })
       .error<IException>([callback](const auto& e) { callback(&e, 0); });
+  processEvents();
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -380,6 +393,7 @@ void cloudAccessDownloadFile(
                  cb->mData.size());
       })
       .error<IException>([callback](const auto& e) { callback(&e, 0, 0); });
+  processEvents();
 }
 
 EMSCRIPTEN_KEEPALIVE std::string* cloudAccessName(ICloudAccess* p) {
