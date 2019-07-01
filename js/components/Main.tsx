@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { CloudFactory, CloudAccess } from "../cloudstorage";
+import { CloudFactory, CloudAccess, CloudFactoryListener } from "../cloudstorage";
 
 import { AppBar } from "react-toolbox/lib/app_bar";
 import { Layout, NavDrawer, Panel } from "react-toolbox/lib/layout";
@@ -11,6 +11,7 @@ import AuthorizedView from "./AuthorizedView";
 import AuthorizeView from "./AuthorizeView";
 import ListView from "./ListView";
 import ViewItem from "./ViewItem";
+import RemoveAccount from "./RemoveAccount";
 
 export interface CloudAccount {
     type: string,
@@ -42,7 +43,18 @@ interface MainState {
 
 export class Main extends React.Component<MainProps, MainState> {
     state = {
-        factory: new CloudFactory(process.env.HOSTNAME!),
+        factory: new CloudFactory(process.env.HOSTNAME!, {
+            onCloudRemoved: (access: CloudAccess) => {
+                const newAccounts: CloudAccount[] = [];
+                for (const d of this.state.accounts) {
+                    if (this.access(d.type, d.label).pointer !== access.pointer) {
+                        newAccounts.push(d);
+                    }
+                }
+                localStorage.setItem("accounts", JSON.stringify(newAccounts));
+                this.setState({ access: this.updateAccounts(this.state.accounts, newAccounts), accounts: newAccounts });
+            }
+        } as CloudFactoryListener),
         access: {},
         drawerActive: false,
         authorizationCode: "",
@@ -95,6 +107,12 @@ export class Main extends React.Component<MainProps, MainState> {
                 });
             }
         }
+        for (const d of oldAccounts) {
+            if (!accounts.find((e: CloudAccount) => { return e.type == d.type && e.label == d.label; })) {
+                const key = d.type + "/" + d.label;
+                delete access[key];
+            }
+        }
         return access;
     }
 
@@ -130,6 +148,9 @@ export class Main extends React.Component<MainProps, MainState> {
                     <Link to="/add_account/">
                         <ListItem caption="Add account" onClick={this.toggleDrawerActive} />
                     </Link>
+                    <Link to="/remove_account/">
+                        <ListItem caption="Remove account" onClick={this.toggleDrawerActive} />
+                    </Link>
                     <Link to="/">
                         <ListItem caption="Main page" onClick={this.toggleDrawerActive} />
                     </Link>
@@ -138,6 +159,7 @@ export class Main extends React.Component<MainProps, MainState> {
             <Panel>
                 <AppBar leftIcon="menu" onLeftIconClick={this.toggleDrawerActive} />
                 <Route path="/add_account/" exact render={() => { return <AddAccount factory={this.state.factory} />; }} />
+                <Route path="/remove_account/" exact render={() => { return <RemoveAccount factory={this.state.factory} access={this.state.access} />; }} />
                 <Route path="/auth/:accountType" component={AuthorizeView} />
                 <Route path="/authorized/:accountType/:code(.*)" render={
                     (props: any) => {

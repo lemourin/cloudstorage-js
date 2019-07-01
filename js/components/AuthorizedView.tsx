@@ -53,9 +53,8 @@ export default class AuthorizedView extends React.Component<AuthorizedViewProps,
                     this.setState({ accounts: json });
                 }
             } catch (e) {
-                throw e;
-            } finally {
                 this.props.factory.removeAccess(access);
+                throw e;
             }
         } catch (e) {
             this.setState({ error: e, pending: false });

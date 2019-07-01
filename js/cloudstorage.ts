@@ -2,7 +2,7 @@ import * as ReadableStream from "readable-stream";
 
 function cloudstorageApi() {
   return {
-    cloudFactoryCreate: Module.cwrap("cloudFactoryCreate", "number", ["string"]),
+    cloudFactoryCreate: Module.cwrap("cloudFactoryCreate", "number", ["string", "number", "number", "number", "number"]),
     cloudFactoryRelease: Module.cwrap("cloudFactoryRelease", null, ["number"]),
     cloudFactoryLoadConfig: Module.cwrap("cloudFactoryLoadConfig", "boolean", ["number", "string"]),
     cloudFactoryAvailableProvidersImpl: Module.cwrap("cloudFactoryAvailableProviders", "number", ["number"]),
@@ -18,6 +18,7 @@ function cloudstorageApi() {
     cloudAccessDownloadFile: Module.cwrap("cloudAccessDownloadFile", null, ["number", "number", "number", "number", "number"]),
     cloudAccessRoot: Module.cwrap("cloudAccessRoot", "number", ["number"]),
     cloudAccessName: Module.cwrap("cloudAccessName", "number", ["number"]),
+    cloudAccessToken: Module.cwrap("cloudAccessToken", "number", ["number"]),
 
     vectorStringGet: Module.cwrap("vectorStringGet", "string", ["number", "number"]),
     vectorStringSize: Module.cwrap("vectorStringSize", "number", ["number"]),
@@ -160,6 +161,10 @@ export class CloudAccess {
     return Cloud.string(this.api.cloudAccessName(this.pointer));
   }
 
+  token() {
+    return Cloud.string(this.api.cloudAccessToken(this.pointer));
+  }
+
   listDirectoryPage(item: CloudItem, token: string): Promise<CloudPageData> {
     const api = this.api;
     return new Promise((resolve, reject) => {
@@ -260,16 +265,63 @@ export class CloudAccess {
   }
 };
 
+export interface CloudFactoryListener {
+  onCloudCreated(access: CloudAccess): void;
+  onCloudRemoved(access: CloudAccess): void;
+  onCloudAuthenticationCodeExchangeFailed(provider: string, error: CloudError): void;
+  onCloudAuthenticationCodeReceived(provider: string, code: string): void;
+};
+
 export class CloudFactory {
   api: any
   pointer: number
-  constructor(hostname: string) {
+  cloudAuthenticationCodeExchangeFailedPointer: number
+  cloudAuthenticationCodeReceivedPointer: number
+  cloudCreatedPointer: number
+  cloudRemovedPointer: number
+  constructor(hostname: string, listener: CloudFactoryListener) {
     this.api = Cloud.api();
-    this.pointer = this.api.cloudFactoryCreate(hostname);
+    this.cloudAuthenticationCodeExchangeFailedPointer = addFunction(
+      (error: number, provider: number) => {
+        const api = this.api;
+        if (listener.onCloudAuthenticationCodeExchangeFailed)
+          listener.onCloudAuthenticationCodeExchangeFailed(
+            Cloud.string(provider),
+            new CloudError(api.exceptionCode(error), api.exceptionDescription(error))
+          );
+      },
+      "vii"
+    );
+    this.cloudAuthenticationCodeReceivedPointer = addFunction(
+      (provider: number, code: number) => {
+        if (listener.onCloudAuthenticationCodeReceived)
+          listener.onCloudAuthenticationCodeReceived(Cloud.string(provider), Cloud.string(code));
+      },
+      "vii"
+    );
+    this.cloudCreatedPointer = addFunction(
+      (access: number) => { if (listener.onCloudCreated) listener.onCloudCreated(new CloudAccess(access)); },
+      "vi"
+    );
+    this.cloudRemovedPointer = addFunction(
+      (access: number) => { if (listener.onCloudRemoved) listener.onCloudRemoved(new CloudAccess(access)); },
+      "vi"
+    );
+    this.pointer = this.api.cloudFactoryCreate(
+      hostname,
+      this.cloudAuthenticationCodeExchangeFailedPointer,
+      this.cloudAuthenticationCodeReceivedPointer,
+      this.cloudCreatedPointer,
+      this.cloudRemovedPointer
+    );
   }
 
   destroy() {
     this.api.cloudFactoryRelease(this.pointer);
+    removeFunction(this.cloudAuthenticationCodeExchangeFailedPointer);
+    removeFunction(this.cloudAuthenticationCodeReceivedPointer);
+    removeFunction(this.cloudCreatedPointer);
+    removeFunction(this.cloudRemovedPointer);
   }
 
   availableProviders(): string[] {

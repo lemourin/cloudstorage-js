@@ -223,13 +223,42 @@ struct DummyHttpServerFactory : public IHttpServerFactory {
 };
 
 struct CloudFactoryCallback : public ICloudFactory::ICallback {
-  void onCloudAuthenticationCodeExchangeFailed(
-      const std::string& /* provider */, const IException&) override {}
-  void onCloudAuthenticationCodeReceived(const std::string& /* provider */,
-                                         const std::string&) override {}
-  void onCloudCreated(const std::shared_ptr<ICloudAccess>&) override {}
-  void onCloudRemoved(const std::shared_ptr<ICloudAccess>&) override {}
+  CloudFactoryCallback(
+      void (*onCloudAuthenticationCodeExchangeFailed)(
+          const IException*, const std::string* provider),
+      void (*onCloudAuthenticationCodeReceived)(const std::string* provider,
+                                                const std::string* code),
+      void (*onCloudCreated)(ICloudAccess*),
+      void (*onCloudRemoved)(ICloudAccess*))
+      : mOnCloudAuthenticationCodeExchangeFailed(
+            onCloudAuthenticationCodeExchangeFailed),
+        mOnCloudAuthenticationCodeReceived(onCloudAuthenticationCodeReceived),
+        mOnCloudCreated(onCloudCreated),
+        mOnCloudRemoved(onCloudRemoved) {}
+
+  void onCloudAuthenticationCodeExchangeFailed(const std::string& provider,
+                                               const IException& e) override {
+    mOnCloudAuthenticationCodeExchangeFailed(&e, new std::string(provider));
+  }
+  void onCloudAuthenticationCodeReceived(const std::string& provider,
+                                         const std::string& code) override {
+    mOnCloudAuthenticationCodeReceived(new std::string(provider),
+                                       new std::string(code));
+  }
+  void onCloudCreated(const std::shared_ptr<ICloudAccess>& p) override {
+    mOnCloudCreated(p.get());
+  }
+  void onCloudRemoved(const std::shared_ptr<ICloudAccess>& p) override {
+    mOnCloudRemoved(p.get());
+  }
   void onEventsAdded() override {}
+
+  void (*mOnCloudAuthenticationCodeExchangeFailed)(const IException*,
+                                                   const std::string* provider);
+  void (*mOnCloudAuthenticationCodeReceived)(const std::string* provider,
+                                             const std::string* code);
+  void (*mOnCloudCreated)(ICloudAccess*);
+  void (*mOnCloudRemoved)(ICloudAccess*);
 };
 
 }  // namespace
@@ -241,7 +270,14 @@ void cloudFactorySetCurrentFileSize(uint32_t size) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-ICloudFactory* cloudFactoryCreate(const char* hostname) {
+ICloudFactory* cloudFactoryCreate(
+    const char* hostname,
+    void (*onCloudAuthenticationCodeExchangeFailed)(
+        const IException*, const std::string* provider),
+    void (*onCloudAuthenticationCodeReceived)(const std::string* provider,
+                                              const std::string* code),
+    void (*onCloudCreated)(ICloudAccess*),
+    void (*onCloudRemoved)(ICloudAccess*)) {
   static bool initialized;
   if (!initialized) {
     gCloudFactory = ICloudFactory::create(
@@ -249,7 +285,10 @@ ICloudFactory* cloudFactoryCreate(const char* hostname) {
                             hostname, std::make_unique<JSHttp>(),
                             std::make_unique<DummyHttpServerFactory>(), nullptr,
                             std::make_unique<DummyThreadPoolFactory>(),
-                            std::make_unique<CloudFactoryCallback>()})
+                            std::make_unique<CloudFactoryCallback>(
+                                onCloudAuthenticationCodeExchangeFailed,
+                                onCloudAuthenticationCodeReceived,
+                                onCloudCreated, onCloudRemoved)})
                         .release();
     initialized = true;
   }
@@ -341,6 +380,11 @@ int vectorStringSize(const std::vector<std::string>* d) { return d->size(); }
 
 EMSCRIPTEN_KEEPALIVE
 void vectorStringRelease(const std::vector<std::string>* d) { delete d; }
+
+EMSCRIPTEN_KEEPALIVE
+std::string* cloudAccessToken(ICloudAccess* p) {
+  return new std::string(p->token());
+}
 
 EMSCRIPTEN_KEEPALIVE
 void cloudAccessListDirectoryPage(ICloudAccess* p, IItem::Pointer* item,
