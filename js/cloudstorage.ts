@@ -245,21 +245,22 @@ export class CloudAccess {
     const CHUNK_SIZE = 1 * 1024 * 1024;
     const e = end == -1 ? item.size() - 1 : end;
     const access = this;
-    const i = item.copy();
+    let i: CloudItem | null = item.copy();
     let currentPosition = start;
     return new ReadableStream.Readable({
       async read(size: number) {
         const currentRead = Math.min(CHUNK_SIZE, Math.max(e - currentPosition + 1, 0));
         if (currentRead == 0) {
           this.push(null);
-        } else {
+        } else if (i) {
           const data = await access.downloadFileChunk(i, currentPosition, currentRead);
           this.push(data);
           currentPosition += currentRead;
         }
       },
       destroy() {
-        // i.destroy();
+        i!!.destroy();
+        i = null;
       }
     });
   }
