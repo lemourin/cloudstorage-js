@@ -1,8 +1,8 @@
 {
   "name": "cloudstorage-js",
   "scripts": {
-    "build:contrib": ". \"$(cat .env | grep EMSDK_HOME | sed -E \"s/EMSDK_HOME=(.*)/\\1/\")/emsdk_set_env.sh\" && cd contrib && ./bootstrap",
-    "build:emscripten": ". \"$(cat .env | grep EMSDK_HOME | sed -E \"s/EMSDK_HOME=(.*)/\\1/\")/emsdk_set_env.sh\" && cd src && make",
+    "build:contrib": "REPO=$PWD && cd \"$(cat .env | grep EMSDK_HOME | sed -E \"s/EMSDK_HOME=(.*)/\\1/\")\" && . ./emsdk_env.sh && cd $REPO/contrib && ./bootstrap",
+    "build:emscripten": "REPO=$PWD && cd \"$(cat .env | grep EMSDK_HOME | sed -E \"s/EMSDK_HOME=(.*)/\\1/\")\" && . ./emsdk_env.sh && cd $REPO/src && make",
     "build": "webpack --mode=development",
     "build:release": "webpack --mode=production",
     "build:all": "npm run build && npm run build:contrib && npm run build:emscripten"
