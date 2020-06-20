@@ -372,7 +372,7 @@ export class CloudFactory {
           reject(new CloudError(api.exceptionCode(error), api.exceptionDescription(error)));
         }
         removeFunction(exchangeCodeCallback);
-      }, "vi");
+      }, "vii");
       api.cloudFactoryExchangeCode(
         this.pointer,
         name,

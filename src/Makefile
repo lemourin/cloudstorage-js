@@ -9,7 +9,7 @@ LIBS := \
 		${PWD}/../contrib/emscripten/lib/libjsoncpp.a \
 		${PWD}/../contrib/emscripten/lib/libtinyxml2.a
 
-${PWD}/../dist/cloudstorage-wasm.js: cloudstorage.cpp ${LIBS}
+${PWD}/../dist/cloudstorage-wasm.js: cloudstorage.cpp ${LIBS} Makefile
 	em++ cloudstorage.cpp -o ${PWD}/../dist/cloudstorage-wasm.js \
 		-std=c++14 \
 		-Oz \
