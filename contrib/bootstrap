@@ -12,6 +12,9 @@ export CFLAGS="$CXXFLAGS"
 
 set -e
 
+command -v libtoolize >/dev/null 2>&1 || { echo >&2 "libtool is not installed"; exit 1; }
+command -v automake >/dev/null 2>&1 || { echo >&2 "automake is not installed"; exit 1; }
+
 unpack() {
   if [[ ! -d $1 ]]; then
     tar xf $1.$2
@@ -78,6 +81,7 @@ install_tinyxml2() {
   cd build
   emcmake cmake .. \
     -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH -DBUILD_SHARED_LIBS=0 -DBUILD_STATIC_LIBS=1 \
+    -DCMAKE_CROSS_COMPILING=1 \
     -DCMAKE_CXX_FLAGS=$CXXFLAGS
   run_make
 }
@@ -88,8 +92,10 @@ fetch_cryptopp() {
 }
 
 install_cryptopp() {
-  emmake make -j $CONCURRENCY static
-  emmake make -j $CONCURRENCY install PREFIX=$INSTALL_PATH
+  sed -i -E 's/#\s*define\s*CRYPTOPP_CXX11_ATOMICS\s*1//g' config.h &&
+  sed -i -E 's/CXXFLAGS\s*\+=\s*\-pthread//g' GNUMakefile &&
+  emmake make -j $CONCURRENCY static -f GNUMakefile &&
+  emmake make -j $CONCURRENCY install PREFIX=$INSTALL_PATH -f GNUMakefile
 }
 
 fetch_sqlite() {
@@ -97,7 +103,7 @@ fetch_sqlite() {
 }
 
 install_sqlite() {
-  emconfigure ./configure --prefix=$INSTALL_PATH --enable-static --disable-shared
+  emconfigure ./configure --prefix=$INSTALL_PATH --enable-static --disable-shared LDFLAGS="-s ERROR_ON_UNDEFINED_SYMBOLS=0"
   run_make
 }
 
@@ -117,8 +123,8 @@ fetch_curl() {
 }
 
 install_curl() {
-  emconfigure ./configure --prefix=$INSTALL_PATH --enable-static --disable-shared --with-ssl
-  run_make
+  emconfigure ./configure --prefix=$INSTALL_PATH --enable-static --disable-shared --with-ssl --without-libpsl LDFLAGS="-s ERROR_ON_UNDEFINED_SYMBOLS=0" &&
+  cd lib && run_make && cd .. && cp -r include/curl $INSTALL_PATH/include
 }
 
 fetch_cares() {
@@ -127,8 +133,9 @@ fetch_cares() {
 }
 
 install_cares() {
-  ./buildconf
-  emconfigure ./configure --prefix=$INSTALL_PATH --enable-static --disable-shared CPPFLAGS=-DHAVE_RECVFROM
+  mkdir -p build && cd build && \
+  CFLAGS="${CFLAGS} -DHAVE_RECV -DHAVE_RECVFROM -DHAVE_SEND" \
+  LDFLAGS="-s ERROR_ON_UNDEFINED_SYMBOLS=0" emcmake cmake -DBUILD_SHARED_LIBS=0 -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH .. &&
   run_make
 }
 
@@ -161,20 +168,16 @@ fetch_libcloudstorage() {
 }
 
 install_libcloudstorage() {
-  ./bootstrap
-  mkdir -p build 
-  cd build
-  emconfigure ../configure \
-    --enable-static --disable-shared --prefix=$INSTALL_PATH \
-    --with-cryptopp \
-    --with-mega \
-    --without-curl \
-    --without-microhttpd \
-    --without-ffmpeg \
-    libcryptopp_CFLAGS="-I$INSTALL_PATH/include" \
-    libcryptopp_LIBS="-L$INSTALL_PATH/lib -lcryptopp" \
-    PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR \
-    CXXFLAGS=$CXXFLAGS CFLAGS=$CFLAGS
+  mkdir -p build &&
+  cd build &&
+  rm -rf build-tools && mkdir build-tools && cd build-tools && CXXFLAGS="" CFLAGS="" cmake ../../tools/ && make && cd .. &&
+  CXXFLAGS=$CXXFLAGS CFLAGS=$CFLAGS emcmake cmake .. \
+    -DCMAKE_FIND_ROOT_PATH=$INSTALL_PATH \
+    -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH \
+    -DCMAKE_CROSSCOMPILING=1 \
+    -DBUILD_TESTING=0 \
+    -Dcurl_LIBRARY=NOTFOUND \
+    -DBUILD_SHARED_LIBS=0 &&
   run_make
 }
 
@@ -229,7 +232,7 @@ done
 mkdir tarballs -p
 cd tarballs
 
-install "jsoncpp" 1.8.3
+install "jsoncpp" 1.9.3
 install "tinyxml2" 6.0.0
 install "cryptopp" 7.0.0
 install "sqlite" 3240000
