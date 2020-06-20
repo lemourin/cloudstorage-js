@@ -156,7 +156,7 @@ export class Main extends React.Component<MainProps, MainState> {
                     </Link>
                 </List>
             </NavDrawer>
-            <Panel>
+            <Panel style={{width: "100%", height: "100%"}} >
                 <AppBar leftIcon="menu" onLeftIconClick={this.toggleDrawerActive} />
                 <Route path="/add_account/" exact render={() => { return <AddAccount factory={this.state.factory} />; }} />
                 <Route path="/remove_account/" exact render={() => { return <RemoveAccount factory={this.state.factory} access={this.state.access} />; }} />

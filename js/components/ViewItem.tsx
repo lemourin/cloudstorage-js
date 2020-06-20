@@ -91,9 +91,9 @@ export default class ViewItem extends React.Component<ViewItemProps, ViewItemSta
     }
 
     render() {
-        return <div>
-            <video style={{ display: "flex", justifyContent: "center", margin: "auto" }}
-                id="video" width="80%" height="80%" controls autoPlay />
+        return <div style={{ height: "100%" }}>
+            <video style={{ display: "flex", justifyContent: "center", margin: "auto", width: "auto", maxWidth: "80%", maxHeight: "80%" }}
+                id="video" controls autoPlay />
         </div>
     }
 }
